@@ -7,7 +7,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { Cube } from 'lucide-react';
+import { Box } from 'lucide-react';
 
 interface ModelViewerProps {
   file: File | null;
@@ -109,8 +109,9 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ file, materialColor, c
 
     loadModel();
 
+    let animationFrameId: number;
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(animate);
       controls.update();
       renderer.render(scene, camera);
     };
@@ -126,6 +127,7 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ file, materialColor, c
     window.addEventListener('resize', handleResize);
 
     return () => {
+      cancelAnimationFrame(animationFrameId);
       if (fileUrl) {
         URL.revokeObjectURL(fileUrl);
       }
@@ -135,30 +137,14 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ file, materialColor, c
       }
       renderer.dispose();
     };
-  }, [file, onModelLoad]);
-  
-  // Effect for updating material color
-  useEffect(() => {
-    if (!mountRef.current || !scene) return;
-
-    const scene = (renderer as any)._scene as THREE.Scene;
-    if (!scene) return;
-    
-    scene.traverse((object) => {
-        if (object instanceof THREE.Mesh && object.material instanceof THREE.MeshStandardMaterial) {
-            object.material.color.set(materialColor);
-        }
-    });
-
-  }, [materialColor]);
-
+  }, [file, materialColor, onModelLoad]);
 
   return (
     <div ref={mountRef} className={cn("w-full h-full min-h-[400px] bg-blue-50 rounded-lg relative overflow-hidden border", className)}>
       {isLoading && <Skeleton className="absolute inset-0" />}
       {!file && !isLoading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
-          <Cube size={48} className="mb-4" />
+          <Box size={48} className="mb-4" />
           <p className="font-medium">3D Model Viewer</p>
           <p className="text-sm">Upload a model to begin</p>
         </div>
