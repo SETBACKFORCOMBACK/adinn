@@ -1,132 +1,77 @@
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow for automated cost estimation of fabrication projects based on manual user inputs.
+ * @fileOverview This file defines a Genkit flow for automated cost estimation of fabrication projects based on an uploaded image containing project details.
  *
- * - automatedCostEstimation - A function that calculates the estimated cost of a fabrication project.
- * - AutomatedCostEstimationInput - The input type for the automatedCostEstimation function.
- * - AutomatedCostEstimationOutput - The return type for the automatedCostEstimation function.
+ * - estimateFromImage - A function that calculates the estimated cost of a fabrication project from an image.
+ * - EstimateFromImageInput - The input type for the estimateFromImage function.
+ * - EstimateFromImageOutput - The return type for the estimateFromImage function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const AutomatedCostEstimationInputSchema = z.object({
-  materialType: z.string().describe('Type of material chosen for the fabrication.'),
-  materialCost: z.number().describe('Cost of the material per unit (e.g., per meter) in INR.'),
-  frameLength: z.number().describe('Total length of the material to be used in meters.'),
-  numCuts: z.number().describe('Total number of cuts to be made.'),
-  cutCostPerUnit: z.number().describe('Cost per single cut in INR.'),
-  cutTimePerUnit: z.number().describe('Time taken for a single cut in minutes.'),
-  numWelds: z.number().describe('Total number of weld joints.'),
-  weldCostPerUnit: z.number().describe('Cost per single weld in INR.'),
-  weldTimePerUnit: z.number().describe('Time taken for a single weld in minutes.'),
-  numLabours: z.number().describe('Number of labours involved.'),
-  labourCostPerHour: z.number().describe('Cost per hour for a single labour in INR.'),
+const EstimateFromImageInputSchema = z.object({
+  imageDataUri: z
+    .string()
+    .describe(
+      "An image of the project specifications, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+    ),
 });
-export type AutomatedCostEstimationInput = z.infer<typeof AutomatedCostEstimationInputSchema>;
+export type EstimateFromImageInput = z.infer<typeof EstimateFromImageInputSchema>;
 
-const AutomatedCostEstimationOutputSchema = z.object({
-  materialUsage: z.object({
-    totalMaterialRequired: z.string().describe('Total material required, in meters.'),
-    totalMaterialCost: z.number().describe('Total cost of the material in INR.'),
-  }),
-  cuttingDetails: z.object({
-    totalCuts: z.number().describe('Total number of cuts.'),
-    totalCuttingCost: z.number().describe('Total cost for all cutting operations in INR.'),
-    totalCuttingTime: z.number().describe('Total time for all cutting operations in minutes.'),
-  }),
-  weldingDetails: z.object({
-    totalWeldJoints: z.number().describe('Total number of weld joints.'),
-    totalWeldingCost: z.number().describe('Total cost for all welding operations in INR.'),
-    totalWeldingTime: z.number().describe('Total time for all welding operations in minutes.'),
-  }),
-  labourDetails: z.object({
-    totalLabourHours: z.number().describe('Total labour hours for the project.'),
-    totalLabourCost: z.number().describe('Total cost for all labour in INR.'),
-  }),
-  totalSummary: z.object({
-    totalMaterialCost: z.number().describe('Total cost of the material in INR.'),
-    totalOperationsCost: z.number().describe('Sum of total cutting and welding costs in INR.'),
-    totalLabourCost: z.number().describe('Total cost for all labour in INR.'),
-    grandTotalCost: z.number().describe('The grand total fabrication cost in INR.'),
-    totalFabricationTime: z.number().describe('Total fabrication time in minutes.'),
-  }),
+const EstimateFromImageOutputSchema = z.object({
+    givenMaterial: z.string().describe("The primary material mentioned in the image."),
+    materialCostPerUnit: z.string().describe("The cost per unit for the material, including currency and unit."),
+    amountOfMaterialNeeded: z.string().describe("The quantity of material required, including units."),
+    totalMaterialCost: z.string().describe("Calculated as (Amount of material needed * Material cost per unit)."),
+    noOfCuttingsNeeded: z.string().describe("The number of cuts required."),
+    timePerCutting: z.string().describe("The time for a single cut, including units."),
+    totalTimeForCutting: z.string().describe("Calculated as (No of cuttings needed * Time per cutting)."),
+    chargePerCutting: z.string().describe("The cost for a single cut, including currency."),
+    totalChargeForCutting: z.string().describe("Calculated as (No of cuttings needed * Charge per cutting)."),
+    totalNoOfLabour: z.string().describe("The total number of workers involved."),
+    finalFabricationTime: z.string().describe("The total estimated time for the project, including all processes."),
+    productHandoverDate: z.string().describe("A predicted completion and handover date, assuming the project starts today."),
 });
-export type AutomatedCostEstimationOutput = z.infer<typeof AutomatedCostEstimationOutputSchema>;
+export type EstimateFromImageOutput = z.infer<typeof EstimateFromImageOutputSchema>;
 
-export async function automatedCostEstimation(
-  input: AutomatedCostEstimationInput
-): Promise<AutomatedCostEstimationOutput> {
-  return automatedCostEstimationFlow(input);
+export async function estimateFromImage(
+  input: EstimateFromImageInput
+): Promise<EstimateFromImageOutput> {
+  return estimateFromImageFlow(input);
 }
 
 const prompt = ai.definePrompt({
-  name: 'automatedCostEstimationPrompt',
-  input: {schema: AutomatedCostEstimationInputSchema},
-  output: {schema: AutomatedCostEstimationOutputSchema},
-  prompt: `You are an expert fabrication estimator. Based on user inputs, calculate the total cost and time for a fabrication project.
+  name: 'estimateFromImagePrompt',
+  input: {schema: EstimateFromImageInputSchema},
+  output: {schema: EstimateFromImageOutputSchema},
+  prompt: `You are an expert fabrication estimator. Analyze the provided image, which contains details about a fabrication project. Extract all relevant parameters, perform the necessary calculations, and provide a detailed cost and time breakdown.
 
-### INPUT DATA:
-- Material Type: {{materialType}}
-- Material Cost Per Unit (₹): {{materialCost}}
-- Total Frame Length: {{frameLength}} meters
+Image with project details: {{media url=imageDataUri}}
 
-### FABRICATION DETAILS:
-- Number of Cuts: {{numCuts}}
-- Cost per Cut (₹): {{cutCostPerUnit}}
-- Time per Cut (minutes): {{cutTimePerUnit}}
-- Number of Weld Joints: {{numWelds}}
-- Cost per Weld (₹): {{weldCostPerUnit}}
-- Time per Weld (minutes): {{weldTimePerUnit}}
+From the image, identify and calculate the following, then provide the output in a clean JSON format. If a value is not present in the image, estimate it based on common fabrication standards.
 
-### LABOUR DETAILS:
-- Number of Labours: {{numLabours}}
-- Labour Cost Per Hour (₹): {{labourCostPerHour}}
-
-### CALCULATION LOGIC:
-1.  **Material Cost**: \`frameLength\` * \`materialCost\`.
-2.  **Cutting Cost**: \`numCuts\` * \`cutCostPerUnit\`.
-3.  **Cutting Time**: \`numCuts\` * \`cutTimePerUnit\`.
-4.  **Welding Cost**: \`numWelds\` * \`weldCostPerUnit\`.
-5.  **Welding Time**: \`numWelds\` * \`weldTimePerUnit\`.
-6.  **Total Fabrication Time (minutes)**: \`Cutting Time\` + \`Welding Time\`.
-7.  **Total Labour Hours**: (\`Total Fabrication Time (minutes)\` / 60).
-8.  **Total Labour Cost**: \`Total Labour Hours\` * \`numLabours\` * \`labourCostPerHour\`.
-9.  **Total Operations Cost**: \`Cutting Cost\` + \`Welding Cost\`.
-10. **Grand Total Cost**: \`Material Cost\` + \`Operations Cost\` + \`Total Labour Cost\`.
-
-### EXPECTED OUTPUT:
-Provide a clean JSON output with the following structure. Do not include any unnecessary text, only the structured result.
-
-1.  **Material Usage**:
-    -   totalMaterialRequired (string, e.g., "{{frameLength}} meters")
-    -   totalMaterialCost (number)
-2.  **Cutting Details**:
-    -   totalCuts (number)
-    -   totalCuttingCost (number)
-    -   totalCuttingTime (number, in minutes)
-3.  **Welding Details**:
-    -   totalWeldJoints (number)
-    -   totalWeldingCost (number)
-    -   totalWeldingTime (number, in minutes)
-4.  **Labour Details**:
-    -   totalLabourHours (number)
-    -   totalLabourCost (number)
-5.  **Total Summary**:
-    -   totalMaterialCost (number)
-    -   totalOperationsCost (number)
-    -   totalLabourCost (number)
-    -   grandTotalCost (number)
-    -   totalFabricationTime (number, in minutes)
+- givenMaterial: The primary material mentioned.
+- materialCostPerUnit: The cost per unit for the material.
+- amountOfMaterialNeeded: The quantity of material required.
+- totalMaterialCost: Calculated as (Amount of material needed * Material cost per unit).
+- noOfCuttingsNeeded: The number of cuts required.
+- timePerCutting: The time for a single cut.
+- totalTimeForCutting: Calculated as (No of cuttings needed * Time per cutting).
+- chargePerCutting: The cost for a single cut.
+- totalChargeForCutting: Calculated as (No of cuttings needed * Charge per cutting).
+- totalNoOfLabour: The total number of workers involved.
+- finalFabricationTime: The total estimated time for the project, including all processes.
+- productHandoverDate: A predicted completion and handover date, assuming the project starts today.
 `,
 });
 
-const automatedCostEstimationFlow = ai.defineFlow(
+const estimateFromImageFlow = ai.defineFlow(
   {
-    name: 'automatedCostEstimationFlow',
-    inputSchema: AutomatedCostEstimationInputSchema,
-    outputSchema: AutomatedCostEstimationOutputSchema,
+    name: 'estimateFromImageFlow',
+    inputSchema: EstimateFromImageInputSchema,
+    outputSchema: EstimateFromImageOutputSchema,
   },
   async input => {
     const {output} = await prompt(input);
