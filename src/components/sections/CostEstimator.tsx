@@ -2,128 +2,71 @@
 
 import { useState } from "react";
 import { automatedCostEstimation, type AutomatedCostEstimationInput, type AutomatedCostEstimationOutput } from "@/ai/flows/automated-cost-estimation";
-import { predictModelParameters } from "@/ai/flows/predict-model-parameters";
-import { suggestMaterials } from "@/ai/flows/material-suggestions";
-import { ModelViewer } from "@/components/ModelViewer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Bot, Cpu, FileUp, IndianRupee, Lightbulb, Loader2, Sparkles, Wrench } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { Textarea } from "../ui/textarea";
+import { Cpu, IndianRupee, Loader2, Wrench, Hammer, Users, Timer } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 
-type PredictedParams = {
-  materialType: string;
-  frameLength: number;
-  numCuts: number;
-  numWelds: number;
-};
-
-type EstimatedCost = AutomatedCostEstimationOutput;
-
-type MaterialSuggestions = {
-  suggestedMaterials: string[];
-  reasoning: string;
-};
-
-const materialOptions = [
-    { value: "#c0c0c0", label: "Aluminum", costPerMeter: 450, cutCost: 20, cutTime: 2, weldCost: 150, weldTime: 10 },
-    { value: "#b87333", label: "Copper", costPerMeter: 800, cutCost: 25, cutTime: 2.5, weldCost: 180, weldTime: 12 },
-    { value: "#e5e4e2", label: "Steel", costPerMeter: 300, cutCost: 30, cutTime: 3, weldCost: 200, weldTime: 15 },
-    { value: "#ffd700", label: "Gold", costPerMeter: 5000000, cutCost: 100, cutTime: 5, weldCost: 1000, weldTime: 20 },
-    { value: "#f5f5f5", label: "Plastic (PLA)", costPerMeter: 50, cutCost: 5, cutTime: 1, weldCost: 25, weldTime: 5 },
-    { value: "#444444", label: "Carbon Fiber", costPerMeter: 2500, cutCost: 50, cutTime: 4, weldCost: 0, weldTime: 0 },
-];
+const materialTypes = ['Steel', 'Aluminum', 'Copper', 'Plastic (PLA)', 'Carbon Fiber'];
 
 export function CostEstimator() {
-  const [file, setFile] = useState<File | null>(null);
-  const [modelData, setModelData] = useState<string>("");
-  const [modelDimensions, setModelDimensions] = useState<{ x: number; y: number; z: number } | null>(null);
-  
-  const [isPredicting, setIsPredicting] = useState(false);
-  const [predictedParams, setPredictedParams] = useState<PredictedParams | null>(null);
+  const [formState, setFormState] = useState({
+    materialType: 'Steel',
+    frameLength: '',
+    materialCost: '',
+    numCuts: '',
+    cutTimePerUnit: '',
+    cutCostPerUnit: '',
+    numWelds: '',
+    weldTimePerUnit: '',
+    weldCostPerUnit: '',
+    numLabours: '',
+    labourCostPerHour: ''
+  });
   
   const [isEstimating, setIsEstimating] = useState(false);
-  const [estimatedCost, setEstimatedCost] = useState<EstimatedCost | null>(null);
-
-  const [isSuggesting, setIsSuggesting] = useState(false);
-  const [materialSuggestions, setMaterialSuggestions] = useState<MaterialSuggestions | null>(null);
-
-  const [selectedMaterial, setSelectedMaterial] = useState(materialOptions[0].value);
-  const [modelDescription, setModelDescription] = useState("");
+  const [estimatedCost, setEstimatedCost] = useState<AutomatedCostEstimationOutput | null>(null);
   
   const { toast } = useToast();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile && (selectedFile.name.endsWith(".obj") || selectedFile.name.endsWith(".stl"))) {
-      setFile(selectedFile);
-      setPredictedParams(null);
-      setEstimatedCost(null);
-      setMaterialSuggestions(null);
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setModelData(event.target?.result as string);
-      };
-      reader.readAsText(selectedFile);
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Invalid File Type",
-        description: "Please upload a .obj or .stl file.",
-      });
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormState(prevState => ({ ...prevState, [id]: value }));
   };
 
-  const handlePredict = async () => {
-    if (!modelData) {
-      toast({ variant: "destructive", title: "No model data available." });
-      return;
-    }
-    setIsPredicting(true);
-    setEstimatedCost(null);
-    try {
-      const params = await predictModelParameters({ modelData });
-      setPredictedParams(params);
-      toast({ title: "Parameters Predicted", description: "AI has analyzed the model." });
-    } catch (error) {
-      console.error(error);
-      toast({ variant: "destructive", title: "Prediction Failed", description: "Could not predict parameters." });
-    } finally {
-      setIsPredicting(false);
-    }
+  const handleMaterialChange = (value: string) => {
+    setFormState(prevState => ({ ...prevState, materialType: value }));
   };
 
   const handleEstimate = async () => {
-    if (!predictedParams) {
-      toast({ variant: "destructive", title: "Missing Information", description: "Please predict parameters first." });
-      return;
+    // Basic validation
+    for (const key in formState) {
+        if (formState[key as keyof typeof formState] === '') {
+            toast({ variant: "destructive", title: "Missing Information", description: `Please fill in all fields. "${key}" is missing.` });
+            return;
+        }
     }
+
     setIsEstimating(true);
-    const selectedMaterialData = materialOptions.find(m => m.value === selectedMaterial);
-    
-    if (!selectedMaterialData) {
-        toast({ variant: "destructive", title: "Invalid Material", description: "Please select a valid material." });
-        setIsEstimating(false);
-        return;
-    }
+    setEstimatedCost(null);
 
     try {
       const input: AutomatedCostEstimationInput = {
-          materialType: selectedMaterialData.label,
-          materialCost: selectedMaterialData.costPerMeter,
-          frameLength: predictedParams.frameLength,
-          numCuts: predictedParams.numCuts,
-          cutCostPerUnit: selectedMaterialData.cutCost,
-          cutTimePerUnit: selectedMaterialData.cutTime,
-          numWelds: predictedParams.numWelds,
-          weldCostPerUnit: selectedMaterialData.weldCost,
-          weldTimePerUnit: selectedMaterialData.weldTime,
+          materialType: formState.materialType,
+          materialCost: parseFloat(formState.materialCost),
+          frameLength: parseFloat(formState.frameLength),
+          numCuts: parseInt(formState.numCuts, 10),
+          cutCostPerUnit: parseFloat(formState.cutCostPerUnit),
+          cutTimePerUnit: parseFloat(formState.cutTimePerUnit),
+          numWelds: parseInt(formState.numWelds, 10),
+          weldCostPerUnit: parseFloat(formState.weldCostPerUnit),
+          weldTimePerUnit: parseFloat(formState.weldTimePerUnit),
+          numLabours: parseInt(formState.numLabours, 10),
+          labourCostPerHour: parseFloat(formState.labourCostPerHour),
       };
 
       const result = await automatedCostEstimation(input);
@@ -131,191 +74,172 @@ export function CostEstimator() {
       toast({ title: "Cost Estimated", description: `Project cost is approximately ₹${result.totalSummary.grandTotalCost.toFixed(2)}` });
     } catch (error) {
       console.error(error);
-      toast({ variant: "destructive", title: "Estimation Failed", description: "Could not estimate cost." });
+      toast({ variant: "destructive", title: "Estimation Failed", description: "Could not estimate cost. Please check your inputs." });
     } finally {
       setIsEstimating(false);
     }
   };
 
-  const handleSuggestMaterials = async () => {
-    if (!modelDescription) {
-        toast({ variant: "destructive", title: "Missing Information", description: "Please provide a model description." });
-        return;
-    }
-    setIsSuggesting(true);
-    const currentMaterialLabel = materialOptions.find(m => m.value === selectedMaterial)?.label || 'Unknown';
-    try {
-        const suggestions = await suggestMaterials({
-            modelDescription,
-            currentMaterial: currentMaterialLabel,
-        });
-        setMaterialSuggestions(suggestions);
-        toast({ title: "Material Suggestions Ready", description: "AI has provided alternative materials." });
-    } catch (error) {
-        console.error(error);
-        toast({ variant: "destructive", title: "Suggestion Failed", description: "Could not get material suggestions." });
-    } finally {
-        setIsSuggesting(false);
-    }
-  }
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mt-6">
-      <div className="lg:col-span-3 space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-headline">
-              <FileUp /> 3D Model Upload
-            </CardTitle>
-            <CardDescription>Upload your .obj or .stl file to get started.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Input id="model-upload" type="file" accept=".obj,.stl" onChange={handleFileChange} />
-          </CardContent>
-        </Card>
-        <ModelViewer file={file} materialColor={selectedMaterial} onModelLoad={setModelDimensions} className="h-[500px]" />
-      </div>
-
-      <div className="lg:col-span-2 space-y-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2"><Bot /> AI Parameter Prediction</CardTitle>
-            <CardDescription>Let AI analyze your model to predict key parameters.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={handlePredict} disabled={!file || isPredicting} className="w-full">
-              {isPredicting ? <Loader2 className="animate-spin" /> : <Sparkles className="mr-2" />}
-              Predict Parameters
-            </Button>
-            {predictedParams && (
-              <div className="mt-4 space-y-3 pt-4 border-t">
-                <h3 className="font-semibold text-lg">Predicted Parameters</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="material-type">Predicted Material</Label>
-                  <Input id="material-type" value={predictedParams.materialType} readOnly />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="frame-length">Frame Length (m)</Label>
-                  <Input id="frame-length" value={predictedParams.frameLength} readOnly />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="num-cuts">Number of Cuts</Label>
-                  <Input id="num-cuts" value={predictedParams.numCuts} readOnly />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="num-welds">Number of Welds</Label>
-                  <Input id="num-welds" value={predictedParams.numWelds} readOnly />
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {predictedParams && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2"><IndianRupee /> Cost Estimation</CardTitle>
-            <CardDescription>Select a material and estimate the project cost.</CardDescription>
-          </CardHeader>
-          <CardContent>
-             <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label>Material Selection</Label>
-                    <Select value={selectedMaterial} onValueChange={setSelectedMaterial}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select a material" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {materialOptions.map(opt => (
-                                <SelectItem key={opt.value} value={opt.value}>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 rounded-full" style={{backgroundColor: opt.value}} />
-                                        {opt.label}
-                                    </div>
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <Button onClick={handleEstimate} disabled={isEstimating} className="w-full bg-accent hover:bg-accent/90">
-                  {isEstimating ? <Loader2 className="animate-spin" /> : <Cpu className="mr-2" />}
-                  Estimate Cost
-                </Button>
-             </div>
-            {estimatedCost && (
-                <div className="mt-4 space-y-4 pt-4 border-t">
-                    <h3 className="text-lg font-bold text-center">Fabrication Cost Breakdown</h3>
-                    
-                    <Card className="bg-primary/10">
-                        <CardHeader className="pb-2 pt-4">
-                            <CardTitle className="text-base flex items-center gap-2"><IndianRupee /> Grand Total</CardTitle>
-                        </CardHeader>
-                        <CardContent className="pb-4">
-                            <p className="text-2xl font-bold">₹{estimatedCost.totalSummary.grandTotalCost.toFixed(2)}</p>
-                            <p className="text-sm text-muted-foreground">Total Time: {estimatedCost.totalSummary.totalFabricationTime} minutes</p>
-                        </CardContent>
-                    </Card>
-
-                    <Accordion type="single" collapsible className="w-full">
-                        <AccordionItem value="material">
-                            <AccordionTrigger>🧱 Material Usage</AccordionTrigger>
-                            <AccordionContent className="space-y-1 pl-2">
-                                <p><strong>Total Required:</strong> {estimatedCost.materialUsage.totalMaterialRequired}</p>
-                                <p><strong>Total Cost:</strong> ₹{estimatedCost.materialUsage.totalMaterialCost.toFixed(2)}</p>
-                            </AccordionContent>
-                        </AccordionItem>
-                        <AccordionItem value="cutting">
-                            <AccordionTrigger>✂️ Cutting Details</AccordionTrigger>
-                            <AccordionContent className="space-y-1 pl-2">
-                                <p><strong>Total Cuts:</strong> {estimatedCost.cuttingDetails.totalCuts}</p>
-                                <p><strong>Total Cost:</strong> ₹{estimatedCost.cuttingDetails.totalCuttingCost.toFixed(2)}</p>
-                                <p><strong>Total Time:</strong> {estimatedCost.cuttingDetails.totalCuttingTime} minutes</p>
-                            </AccordionContent>
-                        </AccordionItem>
-                        <AccordionItem value="welding">
-                            <AccordionTrigger>🔩 Welding Details</AccordionTrigger>
-                            <AccordionContent className="space-y-1 pl-2">
-                                <p><strong>Total Welds:</strong> {estimatedCost.weldingDetails.totalWeldJoints}</p>
-                                <p><strong>Total Cost:</strong> ₹{estimatedCost.weldingDetails.totalWeldingCost.toFixed(2)}</p>
-                                <p><strong>Total Time:</strong> {estimatedCost.weldingDetails.totalWeldingTime} minutes</p>
-                            </AccordionContent>
-                        </AccordionItem>
-                    </Accordion>
-                </div>
-            )}
-          </CardContent>
-        </Card>
-        )}
-
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline flex items-center gap-2"><Lightbulb /> Material Suggestions</CardTitle>
-                <CardDescription>Get AI-powered suggestions for alternative, cost-effective materials.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
+    <div className="space-y-6 mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Wrench /> Material & Measurements</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="model-desc">Model Description</Label>
-                        <Textarea id="model-desc" placeholder="e.g., A prototype for a mechanical keyboard case, needs to be durable." value={modelDescription} onChange={(e) => setModelDescription(e.target.value)} />
+                        <Label htmlFor="materialType">Material Type</Label>
+                        <Select value={formState.materialType} onValueChange={handleMaterialChange}>
+                            <SelectTrigger id="materialType-trigger">
+                                <SelectValue placeholder="Select a material" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {materialTypes.map(opt => (
+                                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
-                    <Button onClick={handleSuggestMaterials} disabled={!modelDescription || isSuggesting} className="w-full">
-                        {isSuggesting ? <Loader2 className="animate-spin" /> : <Wrench className="mr-2" />}
-                        Suggest Materials
-                    </Button>
-                </div>
-                {materialSuggestions && (
-                    <Alert variant="default" className="mt-4">
-                        <Lightbulb className="h-4 w-4" />
-                        <AlertTitle>Material Suggestions</AlertTitle>
-                        <AlertDescription>
-                            <p className="font-semibold mb-2">{materialSuggestions.suggestedMaterials.join(', ')}</p>
-                            <p>{materialSuggestions.reasoning}</p>
-                        </AlertDescription>
-                    </Alert>
-                )}
+                    <div className="space-y-2">
+                        <Label htmlFor="frameLength">Material Length (meters)</Label>
+                        <Input id="frameLength" type="number" value={formState.frameLength} onChange={handleInputChange} placeholder="e.g., 12.5" />
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Hammer /> Fabrication Process</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="numCuts">Number of Cuts</Label>
+                        <Input id="numCuts" type="number" value={formState.numCuts} onChange={handleInputChange} placeholder="e.g., 20" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="numWelds">Number of Welds</Label>
+                        <Input id="numWelds" type="number" value={formState.numWelds} onChange={handleInputChange} placeholder="e.g., 15" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="cutTimePerUnit">Time per Cut (mins)</Label>
+                        <Input id="cutTimePerUnit" type="number" value={formState.cutTimePerUnit} onChange={handleInputChange} placeholder="e.g., 2" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="weldTimePerUnit">Time per Weld (mins)</Label>
+                        <Input id="weldTimePerUnit" type="number" value={formState.weldTimePerUnit} onChange={handleInputChange} placeholder="e.g., 10" />
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><IndianRupee /> Cost Per Unit</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="materialCost">Material (₹/meter)</Label>
+                        <Input id="materialCost" type="number" value={formState.materialCost} onChange={handleInputChange} placeholder="e.g., 300" />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="cutCostPerUnit">Per Cut (₹)</Label>
+                        <Input id="cutCostPerUnit" type="number" value={formState.cutCostPerUnit} onChange={handleInputChange} placeholder="e.g., 30" />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="weldCostPerUnit">Per Weld (₹)</Label>
+                        <Input id="weldCostPerUnit" type="number" value={formState.weldCostPerUnit} onChange={handleInputChange} placeholder="e.g., 200" />
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Users /> Labour</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="numLabours">Number of Workers</Label>
+                        <Input id="numLabours" type="number" value={formState.numLabours} onChange={handleInputChange} placeholder="e.g., 2" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="labourCostPerHour">Cost per Hour (₹)</Label>
+                        <Input id="labourCostPerHour" type="number" value={formState.labourCostPerHour} onChange={handleInputChange} placeholder="e.g., 500" />
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+
+        <Card>
+            <CardContent className="pt-6">
+                <Button onClick={handleEstimate} disabled={isEstimating} className="w-full bg-accent hover:bg-accent/90 text-lg py-6">
+                    {isEstimating ? <Loader2 className="animate-spin" /> : <Cpu className="mr-2" />}
+                    Calculate Total Cost
+                </Button>
             </CardContent>
         </Card>
-      </div>
+
+        {estimatedCost && (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Estimation Result</CardTitle>
+                    <CardDescription>A detailed breakdown of the total estimated cost and time for your project.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <div className="space-y-4">
+                        <Card className="bg-primary/10">
+                            <CardHeader className="pb-2 pt-4">
+                                <CardTitle className="text-base flex items-center gap-2"><IndianRupee /> Grand Total</CardTitle>
+                            </CardHeader>
+                            <CardContent className="pb-4">
+                                <p className="text-3xl font-bold">₹{estimatedCost.totalSummary.grandTotalCost.toFixed(2)}</p>
+                                <p className="text-sm text-muted-foreground flex items-center gap-1.5"><Timer size={14} /> Total Time: {estimatedCost.totalSummary.totalFabricationTime} minutes</p>
+                            </CardContent>
+                        </Card>
+
+                        <Accordion type="single" collapsible className="w-full" defaultValue="summary">
+                            <AccordionItem value="summary">
+                                <AccordionTrigger>📊 Total Summary</AccordionTrigger>
+                                <AccordionContent className="space-y-1 pl-2">
+                                    <p><strong>Total Material Cost:</strong> ₹{estimatedCost.totalSummary.totalMaterialCost.toFixed(2)}</p>
+                                    <p><strong>Total Operations Cost:</strong> ₹{estimatedCost.totalSummary.totalOperationsCost.toFixed(2)}</p>
+                                    <p><strong>Total Labour Cost:</strong> ₹{estimatedCost.totalSummary.totalLabourCost.toFixed(2)}</p>
+                                </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value="material">
+                                <AccordionTrigger>🧱 Material Usage</AccordionTrigger>
+                                <AccordionContent className="space-y-1 pl-2">
+                                    <p><strong>Total Required:</strong> {estimatedCost.materialUsage.totalMaterialRequired}</p>
+                                    <p><strong>Total Cost:</strong> ₹{estimatedCost.materialUsage.totalMaterialCost.toFixed(2)}</p>
+                                </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value="cutting">
+                                <AccordionTrigger>✂️ Cutting Details</AccordionTrigger>
+                                <AccordionContent className="space-y-1 pl-2">
+                                    <p><strong>Total Cuts:</strong> {estimatedCost.cuttingDetails.totalCuts}</p>
+                                    <p><strong>Total Cost:</strong> ₹{estimatedCost.cuttingDetails.totalCuttingCost.toFixed(2)}</p>
+                                    <p><strong>Total Time:</strong> {estimatedCost.cuttingDetails.totalCuttingTime} minutes</p>
+                                </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value="welding">
+                                <AccordionTrigger>🔩 Welding Details</AccordionTrigger>
+                                <AccordionContent className="space-y-1 pl-2">
+                                    <p><strong>Total Welds:</strong> {estimatedCost.weldingDetails.totalWeldJoints}</p>
+                                    <p><strong>Total Cost:</strong> ₹{estimatedCost.weldingDetails.totalWeldingCost.toFixed(2)}</p>
+                                    <p><strong>Total Time:</strong> {estimatedCost.weldingDetails.totalWeldingTime} minutes</p>
+                                </AccordionContent>
+                            </AccordionItem>
+                             <AccordionItem value="labour">
+                                <AccordionTrigger>👷 Labour Details</AccordionTrigger>
+                                <AccordionContent className="space-y-1 pl-2">
+                                    <p><strong>Total Hours:</strong> {estimatedCost.labourDetails.totalLabourHours.toFixed(2)} hours</p>
+                                    <p><strong>Total Cost:</strong> ₹{estimatedCost.labourDetails.totalLabourCost.toFixed(2)}</p>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
+                    </div>
+                </CardContent>
+            </Card>
+        )}
     </div>
   );
 }
