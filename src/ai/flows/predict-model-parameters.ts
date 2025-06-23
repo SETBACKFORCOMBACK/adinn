@@ -20,8 +20,9 @@ export type PredictModelParametersInput = z.infer<typeof PredictModelParametersI
 
 const PredictModelParametersOutputSchema = z.object({
   materialType: z.string().describe('The predicted material type of the 3D model.'),
-  weldingTime: z.string().describe('The predicted welding time in hours for the 3D model.'),
-  otherParameters: z.string().describe('Other relevant parameters predicted by the AI.'),
+  frameLength: z.number().describe('The total length of the frame in meters, inferred from model dimensions.'),
+  numCuts: z.number().describe('The estimated number of cuts required.'),
+  numWelds: z.number().describe('The estimated number of weld joints required.'),
 });
 export type PredictModelParametersOutput = z.infer<typeof PredictModelParametersOutputSchema>;
 
@@ -33,21 +34,17 @@ const prompt = ai.definePrompt({
   name: 'predictModelParametersPrompt',
   input: {schema: PredictModelParametersInputSchema},
   output: {schema: PredictModelParametersOutputSchema},
-  prompt: `You are an AI expert in 3D modeling and manufacturing cost estimation.
+  prompt: `You are an AI expert in 3D modeling and manufacturing. Based on the provided 3D model data, analyze its geometry and predict key fabrication parameters.
 
-  Based on the provided 3D model data, predict the following parameters:
-  - Material Type: Infer the material type used in the 3D model.
-  - Welding Time: Estimate the welding time required in hours.
-  - Other Parameters: List any other relevant parameters that can be inferred from the model data.
+3D Model Data: {{{modelData}}}
 
-  3D Model Data: {{{modelData}}}
+From the geometry, estimate the following:
+- Material Type: Suggest a likely material for this kind of model.
+- Frame Length: Calculate the total length of all structural members in meters.
+- Number of Cuts: Estimate the number of individual cuts required to create the pieces.
+- Number of Welds: Estimate the number of joints that will require welding.
 
-  Provide your prediction in JSON format:
-  {
-    "materialType": "<predicted_material_type>",
-    "weldingTime": "<predicted_welding_time_in_hours>",
-    "otherParameters": "<other_relevant_parameters>"
-  }`,
+Provide your prediction in a structured JSON format.`,
 });
 
 const predictModelParametersFlow = ai.defineFlow(

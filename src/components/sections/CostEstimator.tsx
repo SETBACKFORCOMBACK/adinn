@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { automatedCostEstimation } from "@/ai/flows/automated-cost-estimation";
+import { automatedCostEstimation, type AutomatedCostEstimationInput, type AutomatedCostEstimationOutput } from "@/ai/flows/automated-cost-estimation";
 import { predictModelParameters } from "@/ai/flows/predict-model-parameters";
 import { suggestMaterials } from "@/ai/flows/material-suggestions";
 import { ModelViewer } from "@/components/ModelViewer";
@@ -14,17 +14,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Bot, Cpu, FileUp, IndianRupee, Lightbulb, Loader2, Sparkles, Wrench } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Textarea } from "../ui/textarea";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 
 type PredictedParams = {
   materialType: string;
-  weldingTime: string;
-  otherParameters: string;
+  frameLength: number;
+  numCuts: number;
+  numWelds: number;
 };
 
-type EstimatedCost = {
-  estimatedCost: number;
-  costBreakdown: string;
-};
+type EstimatedCost = AutomatedCostEstimationOutput;
 
 type MaterialSuggestions = {
   suggestedMaterials: string[];
@@ -32,12 +31,12 @@ type MaterialSuggestions = {
 };
 
 const materialOptions = [
-    { value: "#c0c0c0", label: "Aluminum" },
-    { value: "#b87333", label: "Copper" },
-    { value: "#e5e4e2", label: "Steel" },
-    { value: "#ffd700", label: "Gold" },
-    { value: "#f5f5f5", label: "Plastic (PLA)" },
-    { value: "#444444", label: "Carbon Fiber" },
+    { value: "#c0c0c0", label: "Aluminum", costPerMeter: 450, cutCost: 20, cutTime: 2, weldCost: 150, weldTime: 10 },
+    { value: "#b87333", label: "Copper", costPerMeter: 800, cutCost: 25, cutTime: 2.5, weldCost: 180, weldTime: 12 },
+    { value: "#e5e4e2", label: "Steel", costPerMeter: 300, cutCost: 30, cutTime: 3, weldCost: 200, weldTime: 15 },
+    { value: "#ffd700", label: "Gold", costPerMeter: 5000000, cutCost: 100, cutTime: 5, weldCost: 1000, weldTime: 20 },
+    { value: "#f5f5f5", label: "Plastic (PLA)", costPerMeter: 50, cutCost: 5, cutTime: 1, weldCost: 25, weldTime: 5 },
+    { value: "#444444", label: "Carbon Fiber", costPerMeter: 2500, cutCost: 50, cutTime: 4, weldCost: 0, weldTime: 0 },
 ];
 
 export function CostEstimator() {
@@ -87,6 +86,7 @@ export function CostEstimator() {
       return;
     }
     setIsPredicting(true);
+    setEstimatedCost(null);
     try {
       const params = await predictModelParameters({ modelData });
       setPredictedParams(params);
@@ -100,20 +100,35 @@ export function CostEstimator() {
   };
 
   const handleEstimate = async () => {
-    if (!predictedParams || !modelDimensions) {
+    if (!predictedParams) {
       toast({ variant: "destructive", title: "Missing Information", description: "Please predict parameters first." });
       return;
     }
     setIsEstimating(true);
-    const currentMaterialLabel = materialOptions.find(m => m.value === selectedMaterial)?.label || 'Unknown';
+    const selectedMaterialData = materialOptions.find(m => m.value === selectedMaterial);
+    
+    if (!selectedMaterialData) {
+        toast({ variant: "destructive", title: "Invalid Material", description: "Please select a valid material." });
+        setIsEstimating(false);
+        return;
+    }
+
     try {
-      const result = await automatedCostEstimation({
-        modelDimensions: `${modelDimensions.x.toFixed(2)} x ${modelDimensions.y.toFixed(2)} x ${modelDimensions.z.toFixed(2)} mm`,
-        materialSelection: currentMaterialLabel,
-        aiPredictedParameters: JSON.stringify(predictedParams),
-      });
+      const input: AutomatedCostEstimationInput = {
+          materialType: selectedMaterialData.label,
+          materialCost: selectedMaterialData.costPerMeter,
+          frameLength: predictedParams.frameLength,
+          numCuts: predictedParams.numCuts,
+          cutCostPerUnit: selectedMaterialData.cutCost,
+          cutTimePerUnit: selectedMaterialData.cutTime,
+          numWelds: predictedParams.numWelds,
+          weldCostPerUnit: selectedMaterialData.weldCost,
+          weldTimePerUnit: selectedMaterialData.weldTime,
+      };
+
+      const result = await automatedCostEstimation(input);
       setEstimatedCost(result);
-      toast({ title: "Cost Estimated", description: `Project cost is approximately ₹${result.estimatedCost.toFixed(2)}` });
+      toast({ title: "Cost Estimated", description: `Project cost is approximately ₹${result.totalSummary.grandTotalCost.toFixed(2)}` });
     } catch (error) {
       console.error(error);
       toast({ variant: "destructive", title: "Estimation Failed", description: "Could not estimate cost." });
@@ -161,7 +176,7 @@ export function CostEstimator() {
         <ModelViewer file={file} materialColor={selectedMaterial} onModelLoad={setModelDimensions} className="h-[500px]" />
       </div>
 
-      <div className="lg:col-span-2 space-y-4">
+      <div className="lg:col-span-2 space-y-2">
         <Card>
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2"><Bot /> AI Parameter Prediction</CardTitle>
@@ -176,16 +191,20 @@ export function CostEstimator() {
               <div className="mt-4 space-y-3 pt-4 border-t">
                 <h3 className="font-semibold text-lg">Predicted Parameters</h3>
                 <div className="space-y-2">
-                  <Label htmlFor="material-type">Material Type</Label>
+                  <Label htmlFor="material-type">Predicted Material</Label>
                   <Input id="material-type" value={predictedParams.materialType} readOnly />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="welding-time">Welding Time (hours)</Label>
-                  <Input id="welding-time" value={predictedParams.weldingTime} readOnly />
+                  <Label htmlFor="frame-length">Frame Length (m)</Label>
+                  <Input id="frame-length" value={predictedParams.frameLength} readOnly />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="other-params">Other Parameters</Label>
-                  <Textarea id="other-params" value={predictedParams.otherParameters} readOnly />
+                  <Label htmlFor="num-cuts">Number of Cuts</Label>
+                  <Input id="num-cuts" value={predictedParams.numCuts} readOnly />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="num-welds">Number of Welds</Label>
+                  <Input id="num-welds" value={predictedParams.numWelds} readOnly />
                 </div>
               </div>
             )}
@@ -224,11 +243,45 @@ export function CostEstimator() {
                 </Button>
              </div>
             {estimatedCost && (
-                <Alert className="mt-4">
-                    <IndianRupee className="h-4 w-4" />
-                    <AlertTitle>Estimated Cost: ₹{estimatedCost.estimatedCost.toFixed(2)}</AlertTitle>
-                    <AlertDescription>{estimatedCost.costBreakdown}</AlertDescription>
-                </Alert>
+                <div className="mt-4 space-y-4 pt-4 border-t">
+                    <h3 className="text-lg font-bold text-center">Fabrication Cost Breakdown</h3>
+                    
+                    <Card className="bg-primary/10">
+                        <CardHeader className="pb-2 pt-4">
+                            <CardTitle className="text-base flex items-center gap-2"><IndianRupee /> Grand Total</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pb-4">
+                            <p className="text-2xl font-bold">₹{estimatedCost.totalSummary.grandTotalCost.toFixed(2)}</p>
+                            <p className="text-sm text-muted-foreground">Total Time: {estimatedCost.totalSummary.totalFabricationTime} minutes</p>
+                        </CardContent>
+                    </Card>
+
+                    <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="material">
+                            <AccordionTrigger>🧱 Material Usage</AccordionTrigger>
+                            <AccordionContent className="space-y-1 pl-2">
+                                <p><strong>Total Required:</strong> {estimatedCost.materialUsage.totalMaterialRequired}</p>
+                                <p><strong>Total Cost:</strong> ₹{estimatedCost.materialUsage.totalMaterialCost.toFixed(2)}</p>
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="cutting">
+                            <AccordionTrigger>✂️ Cutting Details</AccordionTrigger>
+                            <AccordionContent className="space-y-1 pl-2">
+                                <p><strong>Total Cuts:</strong> {estimatedCost.cuttingDetails.totalCuts}</p>
+                                <p><strong>Total Cost:</strong> ₹{estimatedCost.cuttingDetails.totalCuttingCost.toFixed(2)}</p>
+                                <p><strong>Total Time:</strong> {estimatedCost.cuttingDetails.totalCuttingTime} minutes</p>
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="welding">
+                            <AccordionTrigger>🔩 Welding Details</AccordionTrigger>
+                            <AccordionContent className="space-y-1 pl-2">
+                                <p><strong>Total Welds:</strong> {estimatedCost.weldingDetails.totalWeldJoints}</p>
+                                <p><strong>Total Cost:</strong> ₹{estimatedCost.weldingDetails.totalWeldingCost.toFixed(2)}</p>
+                                <p><strong>Total Time:</strong> {estimatedCost.weldingDetails.totalWeldingTime} minutes</p>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                </div>
             )}
           </CardContent>
         </Card>
@@ -245,7 +298,7 @@ export function CostEstimator() {
                         <Label htmlFor="model-desc">Model Description</Label>
                         <Textarea id="model-desc" placeholder="e.g., A prototype for a mechanical keyboard case, needs to be durable." value={modelDescription} onChange={(e) => setModelDescription(e.target.value)} />
                     </div>
-                    <Button onClick={handleSuggestMaterials} disabled={isSuggesting} className="w-full">
+                    <Button onClick={handleSuggestMaterials} disabled={!modelDescription || isSuggesting} className="w-full">
                         {isSuggesting ? <Loader2 className="animate-spin" /> : <Wrench className="mr-2" />}
                         Suggest Materials
                     </Button>
