@@ -15,9 +15,6 @@ const SuggestMaterialsInputSchema = z.object({
   modelDescription: z
     .string()
     .describe('A detailed description of the 3D model, including its purpose, size, and any specific requirements.'),
-  costRequirements: z
-    .string()
-    .describe('The desired cost range or budget for the 3D model project.'),
   currentMaterial: z
     .string()
     .describe('The currently selected material for the 3D model.'),
@@ -44,10 +41,9 @@ const prompt = ai.definePrompt({
   output: {schema: SuggestMaterialsOutputSchema},
   prompt: `You are an expert in material science and cost estimation for 3D model projects.
 
-  Based on the description of the 3D model, the cost requirements, and the current material being used, suggest alternative materials that could be used to accomplish the project in a more cost-effective way.
+  Based on the description of the 3D model and the current material being used, suggest alternative materials that could be used to accomplish the project in a more cost-effective way.
 
   Model Description: {{{modelDescription}}}
-  Cost Requirements: {{{costRequirements}}}
   Current Material: {{{currentMaterial}}}
 
   Consider factors such as material properties, availability, and manufacturing processes when making your suggestions.

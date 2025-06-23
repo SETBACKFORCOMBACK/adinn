@@ -56,7 +56,6 @@ export function CostEstimator() {
 
   const [selectedMaterial, setSelectedMaterial] = useState(materialOptions[0].value);
   const [modelDescription, setModelDescription] = useState("");
-  const [costRequirements, setCostRequirements] = useState("");
   
   const { toast } = useToast();
 
@@ -124,8 +123,8 @@ export function CostEstimator() {
   };
 
   const handleSuggestMaterials = async () => {
-    if (!modelDescription || !costRequirements) {
-        toast({ variant: "destructive", title: "Missing Information", description: "Please provide a model description and cost requirements." });
+    if (!modelDescription) {
+        toast({ variant: "destructive", title: "Missing Information", description: "Please provide a model description." });
         return;
     }
     setIsSuggesting(true);
@@ -133,7 +132,6 @@ export function CostEstimator() {
     try {
         const suggestions = await suggestMaterials({
             modelDescription,
-            costRequirements,
             currentMaterial: currentMaterialLabel,
         });
         setMaterialSuggestions(suggestions);
@@ -163,7 +161,7 @@ export function CostEstimator() {
         <ModelViewer file={file} materialColor={selectedMaterial} onModelLoad={setModelDimensions} className="h-[500px]" />
       </div>
 
-      <div className="lg:col-span-2 space-y-2">
+      <div className="lg:col-span-2 space-y-4">
         <Card>
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2"><Bot /> AI Parameter Prediction</CardTitle>
@@ -246,10 +244,6 @@ export function CostEstimator() {
                     <div className="space-y-2">
                         <Label htmlFor="model-desc">Model Description</Label>
                         <Textarea id="model-desc" placeholder="e.g., A prototype for a mechanical keyboard case, needs to be durable." value={modelDescription} onChange={(e) => setModelDescription(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="cost-reqs">Cost Requirements</Label>
-                        <Input id="cost-reqs" placeholder="e.g., Under ₹4000 per unit" value={costRequirements} onChange={(e) => setCostRequirements(e.target.value)} />
                     </div>
                     <Button onClick={handleSuggestMaterials} disabled={isSuggesting} className="w-full">
                         {isSuggesting ? <Loader2 className="animate-spin" /> : <Wrench className="mr-2" />}
