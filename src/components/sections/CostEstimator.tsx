@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle, Bot, Cpu, DollarSign, FileUp, Lightbulb, Loader2, Sparkles, Wrench } from "lucide-react";
+import { Bot, Cpu, FileUp, IndianRupee, Lightbulb, Loader2, Sparkles, Wrench } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Textarea } from "../ui/textarea";
 
@@ -114,7 +114,7 @@ export function CostEstimator() {
         aiPredictedParameters: JSON.stringify(predictedParams),
       });
       setEstimatedCost(result);
-      toast({ title: "Cost Estimated", description: `Project cost is approximately $${result.estimatedCost.toFixed(2)}` });
+      toast({ title: "Cost Estimated", description: `Project cost is approximately ₹${result.estimatedCost.toFixed(2)}` });
     } catch (error) {
       console.error(error);
       toast({ variant: "destructive", title: "Estimation Failed", description: "Could not estimate cost." });
@@ -163,7 +163,7 @@ export function CostEstimator() {
         <ModelViewer file={file} materialColor={selectedMaterial} onModelLoad={setModelDimensions} className="h-[500px]" />
       </div>
 
-      <div className="lg:col-span-2 space-y-4">
+      <div className="lg:col-span-2 space-y-2">
         <Card>
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2"><Bot /> AI Parameter Prediction</CardTitle>
@@ -197,7 +197,7 @@ export function CostEstimator() {
         {predictedParams && (
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2"><DollarSign /> Cost Estimation</CardTitle>
+            <CardTitle className="font-headline flex items-center gap-2"><IndianRupee /> Cost Estimation</CardTitle>
             <CardDescription>Select a material and estimate the project cost.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -227,8 +227,8 @@ export function CostEstimator() {
              </div>
             {estimatedCost && (
                 <Alert className="mt-4">
-                    <DollarSign className="h-4 w-4" />
-                    <AlertTitle>Estimated Cost: ${estimatedCost.estimatedCost.toFixed(2)}</AlertTitle>
+                    <IndianRupee className="h-4 w-4" />
+                    <AlertTitle>Estimated Cost: ₹{estimatedCost.estimatedCost.toFixed(2)}</AlertTitle>
                     <AlertDescription>{estimatedCost.costBreakdown}</AlertDescription>
                 </Alert>
             )}
@@ -249,7 +249,7 @@ export function CostEstimator() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="cost-reqs">Cost Requirements</Label>
-                        <Input id="cost-reqs" placeholder="e.g., Under $50 per unit" value={costRequirements} onChange={(e) => setCostRequirements(e.target.value)} />
+                        <Input id="cost-reqs" placeholder="e.g., Under ₹4000 per unit" value={costRequirements} onChange={(e) => setCostRequirements(e.target.value)} />
                     </div>
                     <Button onClick={handleSuggestMaterials} disabled={isSuggesting} className="w-full">
                         {isSuggesting ? <Loader2 className="animate-spin" /> : <Wrench className="mr-2" />}

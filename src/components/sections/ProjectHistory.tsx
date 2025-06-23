@@ -9,7 +9,7 @@ const mockProjects: Project[] = [
     name: "Mechanical Keyboard Case",
     thumbnailUrl: "https://placehold.co/600x400.png",
     material: "Aluminum",
-    cost: 125.50,
+    cost: 10480.00,
     date: "2024-07-15",
     dataAiHint: "keyboard case",
   },
@@ -18,7 +18,7 @@ const mockProjects: Project[] = [
     name: "Drone Frame Prototype",
     thumbnailUrl: "https://placehold.co/600x400.png",
     material: "Carbon Fiber",
-    cost: 210.00,
+    cost: 17535.00,
     date: "2024-07-10",
     dataAiHint: "drone frame",
   },
@@ -27,7 +27,7 @@ const mockProjects: Project[] = [
     name: "Figurine Model",
     thumbnailUrl: "https://placehold.co/600x400.png",
     material: "Plastic (PLA)",
-    cost: 35.75,
+    cost: 2985.00,
     date: "2024-06-28",
     dataAiHint: "figurine model",
   },
@@ -36,7 +36,7 @@ const mockProjects: Project[] = [
     name: "Architectural Miniature",
     thumbnailUrl: "https://placehold.co/600x400.png",
     material: "Plastic (PLA)",
-    cost: 88.20,
+    cost: 7365.00,
     date: "2024-06-22",
     dataAiHint: "architectural model"
   },
@@ -45,7 +45,7 @@ const mockProjects: Project[] = [
     name: "Custom Gear Set",
     thumbnailUrl: "https://placehold.co/600x400.png",
     material: "Steel",
-    cost: 154.90,
+    cost: 12934.00,
     date: "2024-06-18",
     dataAiHint: "gear set"
   },
@@ -54,7 +54,7 @@ const mockProjects: Project[] = [
     name: "Phone Stand",
     thumbnailUrl: "https://placehold.co/600x400.png",
     material: "Copper",
-    cost: 65.00,
+    cost: 5427.00,
     date: "2024-06-05",
     dataAiHint: "phone stand"
   },
@@ -88,7 +88,7 @@ export function ProjectHistory() {
                   <p className="text-sm text-muted-foreground">{new Date(project.date).toLocaleDateString()}</p>
                 </CardContent>
                 <CardFooter className="p-4 pt-0">
-                    <p className="text-lg font-bold text-primary">${project.cost.toFixed(2)}</p>
+                    <p className="text-lg font-bold text-primary">₹{project.cost.toFixed(2)}</p>
                 </CardFooter>
               </Card>
             ))}

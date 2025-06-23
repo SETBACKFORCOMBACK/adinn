@@ -40,17 +40,18 @@ const prompt = ai.definePrompt({
   name: 'automatedCostEstimationPrompt',
   input: {schema: AutomatedCostEstimationInputSchema},
   output: {schema: AutomatedCostEstimationOutputSchema},
-  prompt: `You are an expert cost estimator for 3D model projects.
+  prompt: `You are an expert cost estimator for 3D model projects, specializing in the Indian market.
 
-  Based on the model dimensions, material selection, and AI-predicted parameters, calculate the estimated cost for the project.
+  Based on the model dimensions, material selection, and AI-predicted parameters, calculate the estimated cost for the project in Indian Rupees (INR).
 
   Model Dimensions: {{{modelDimensions}}}
   Material Selection: {{{materialSelection}}}
   AI-Predicted Parameters: {{{aiPredictedParameters}}}
 
+  Use your knowledge of material costs and labor rates in India to provide an accurate estimate.
   Provide a cost breakdown, including material costs, labor costs, and any other relevant factors.
 
-  Return the estimated cost as a number and the cost breakdown as a string.`,
+  Return the estimated cost as a number in INR and the cost breakdown as a string.`,
 });
 
 const automatedCostEstimationFlow = ai.defineFlow(
