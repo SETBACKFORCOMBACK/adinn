@@ -22,17 +22,17 @@ export type EstimateFromImageInput = z.infer<typeof EstimateFromImageInputSchema
 
 const EstimateFromImageOutputSchema = z.object({
     givenMaterial: z.string().describe("The primary material mentioned in the image."),
-    materialCostPerUnit: z.string().describe("The cost per unit for the material, including currency and unit."),
+    materialCostPerUnit: z.string().describe("The cost per unit for the material, in Indian Rupees (₹) and including the unit."),
     amountOfMaterialNeeded: z.string().describe("The quantity of material required, including units."),
-    totalMaterialCost: z.string().describe("Calculated as (Amount of material needed * Material cost per unit)."),
+    totalMaterialCost: z.string().describe("Calculated as (Amount of material needed * Material cost per unit), in Indian Rupees (₹)."),
     noOfCuttingsNeeded: z.string().describe("The number of cuts required."),
     timePerCutting: z.string().describe("The time for a single cut, including units."),
     totalTimeForCutting: z.string().describe("Calculated as (No of cuttings needed * Time per cutting)."),
-    chargePerCutting: z.string().describe("The cost for a single cut, including currency."),
-    totalChargeForCutting: z.string().describe("Calculated as (No of cuttings needed * Charge per cutting)."),
+    chargePerCutting: z.string().describe("The cost for a single cut, in Indian Rupees (₹)."),
+    totalChargeForCutting: z.string().describe("Calculated as (No of cuttings needed * Charge per cutting), in Indian Rupees (₹)."),
     totalNoOfLabour: z.string().describe("The total number of workers involved."),
     finalFabricationTime: z.string().describe("The total estimated time for the project, including all processes."),
-    productHandoverDate: z.string().describe("A predicted completion and handover date, assuming the project starts today."),
+    productHandoverDate: z.string().describe("A predicted completion and handover date, assuming the project starts today, June 25, 2025."),
 });
 export type EstimateFromImageOutput = z.infer<typeof EstimateFromImageOutputSchema>;
 
@@ -46,7 +46,7 @@ const prompt = ai.definePrompt({
   name: 'estimateFromImagePrompt',
   input: {schema: EstimateFromImageInputSchema},
   output: {schema: EstimateFromImageOutputSchema},
-  prompt: `You are an expert fabrication estimator. Analyze the provided image, which contains details about a fabrication project. Extract all relevant parameters, perform the necessary calculations, and provide a detailed cost and time breakdown.
+  prompt: `You are an expert fabrication estimator. Analyze the provided image, which contains details about a fabrication project. Extract all relevant parameters, perform the necessary calculations, and provide a detailed cost and time breakdown. All cost-related fields must be in Indian Rupees (₹).
 
 Image with project details: {{media url=imageDataUri}}
 
@@ -63,7 +63,7 @@ From the image, identify and calculate the following, then provide the output in
 - totalChargeForCutting: Calculated as (No of cuttings needed * Charge per cutting).
 - totalNoOfLabour: The total number of workers involved.
 - finalFabricationTime: The total estimated time for the project, including all processes.
-- productHandoverDate: A predicted completion and handover date, assuming the project starts today.
+- productHandoverDate: A predicted completion and handover date, assuming the project starts today. Today is June 25, 2025.
 `,
 });
 

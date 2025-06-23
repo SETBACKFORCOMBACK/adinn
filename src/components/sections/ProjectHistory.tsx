@@ -10,7 +10,7 @@ const mockProjects: Project[] = [
     thumbnailUrl: "https://placehold.co/600x400.png",
     material: "Aluminum",
     cost: 10480.00,
-    date: "2024-07-15",
+    date: "2025-06-15",
     dataAiHint: "keyboard case",
   },
   {
@@ -19,7 +19,7 @@ const mockProjects: Project[] = [
     thumbnailUrl: "https://placehold.co/600x400.png",
     material: "Carbon Fiber",
     cost: 17535.00,
-    date: "2024-07-10",
+    date: "2025-06-10",
     dataAiHint: "drone frame",
   },
   {
@@ -28,7 +28,7 @@ const mockProjects: Project[] = [
     thumbnailUrl: "https://placehold.co/600x400.png",
     material: "Plastic (PLA)",
     cost: 2985.00,
-    date: "2024-06-28",
+    date: "2025-05-28",
     dataAiHint: "figurine model",
   },
     {
@@ -37,7 +37,7 @@ const mockProjects: Project[] = [
     thumbnailUrl: "https://placehold.co/600x400.png",
     material: "Plastic (PLA)",
     cost: 7365.00,
-    date: "2024-06-22",
+    date: "2025-05-22",
     dataAiHint: "architectural model"
   },
   {
@@ -46,7 +46,7 @@ const mockProjects: Project[] = [
     thumbnailUrl: "https://placehold.co/600x400.png",
     material: "Steel",
     cost: 12934.00,
-    date: "2024-06-18",
+    date: "2025-05-18",
     dataAiHint: "gear set"
   },
   {
@@ -55,7 +55,7 @@ const mockProjects: Project[] = [
     thumbnailUrl: "https://placehold.co/600x400.png",
     material: "Copper",
     cost: 5427.00,
-    date: "2024-06-05",
+    date: "2025-05-05",
     dataAiHint: "phone stand"
   },
 ];
