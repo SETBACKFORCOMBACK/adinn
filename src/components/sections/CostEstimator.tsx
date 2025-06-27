@@ -5,20 +5,19 @@ import { estimateFromImage, type EstimateFromImageOutput } from "@/ai/flows/auto
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Cpu, Image as ImageIcon, Loader2, Upload } from "lucide-react";
+import { Cpu, Loader2, Upload } from "lucide-react";
 import Image from "next/image";
+import { calculateFabricationCosts, type CalculatedOutput } from "@/lib/cost-calculator";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-// Helper to format camelCase keys into readable labels
-const formatKey = (key: string) => {
-  const result = key.replace(/([A-Z])/g, ' $1');
-  return result.charAt(0).toUpperCase() + result.slice(1);
-};
 
 export function CostEstimator() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isEstimating, setIsEstimating] = useState(false);
-  const [estimatedResult, setEstimatedResult] = useState<EstimateFromImageOutput | null>(null);
+  const [geminiResult, setGeminiResult] = useState<EstimateFromImageOutput | null>(null);
+  const [calculatedResult, setCalculatedResult] = useState<CalculatedOutput | null>(null);
   
   const { toast } = useToast();
 
@@ -31,7 +30,8 @@ export function CostEstimator() {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
-      setEstimatedResult(null); // Clear previous results
+      setGeminiResult(null);
+      setCalculatedResult(null);
     }
   };
   
@@ -42,7 +42,8 @@ export function CostEstimator() {
     }
 
     setIsEstimating(true);
-    setEstimatedResult(null);
+    setGeminiResult(null);
+    setCalculatedResult(null);
 
     try {
       if (!imagePreview) {
@@ -50,7 +51,11 @@ export function CostEstimator() {
       }
       
       const result = await estimateFromImage({ imageDataUri: imagePreview });
-      setEstimatedResult(result);
+      setGeminiResult(result);
+      
+      const calculated = await calculateFabricationCosts(result);
+      setCalculatedResult(calculated);
+
       toast({ title: "Estimation Complete", description: "The project details have been extracted and calculated." });
     } catch (error) {
       console.error(error);
@@ -99,23 +104,84 @@ export function CostEstimator() {
         </Card>
       )}
 
-      {estimatedResult && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Fabrication Estimate</CardTitle>
-            <CardDescription>The following details were extracted and calculated from your image.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {Object.entries(estimatedResult).map(([key, value]) => (
-                <div key={key} className="flex justify-between items-center border-b pb-2">
-                  <span className="text-muted-foreground text-sm">{formatKey(key)}</span>
-                  <span className="font-semibold text-right">{value.toString()}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {geminiResult && calculatedResult && (
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>AI Extraction Result</CardTitle>
+                    <CardDescription>The following details were extracted from your image by the AI.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                     <div className="flex justify-between items-center border-b pb-2">
+                        <span className="text-sm text-muted-foreground">Material Type</span>
+                        <Badge variant="secondary">{geminiResult.material}</Badge>
+                     </div>
+                     <div className="flex justify-between items-center border-b pb-2">
+                        <span className="text-sm text-muted-foreground">Material Length</span>
+                        <span className="font-semibold">{geminiResult.material_length_ft} ft</span>
+                     </div>
+                     <div>
+                        <span className="text-sm text-muted-foreground">Identified Tasks</span>
+                        <div className="flex flex-wrap gap-2 pt-2">
+                            {geminiResult.tasks.map(task => (
+                                <Badge key={task.type} variant="outline">{task.count} x {task.type}</Badge>
+                            ))}
+                        </div>
+                     </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Fabrication Cost & Time Breakdown</CardTitle>
+                    <CardDescription>Costs and times are based on the extracted data and predefined rates.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Task</TableHead>
+                                <TableHead>Quantity</TableHead>
+                                <TableHead>Est. Time</TableHead>
+                                <TableHead className="text-right">Est. Cost</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow>
+                                <TableCell className="font-medium">Material</TableCell>
+                                <TableCell>{geminiResult.material_length_ft} ft</TableCell>
+                                <TableCell>N/A</TableCell>
+                                <TableCell className="text-right font-mono">₹{calculatedResult.materialCost.toFixed(2)}</TableCell>
+                            </TableRow>
+                            {calculatedResult.tasksBreakdown.map(task => (
+                                 <TableRow key={task.type}>
+                                    <TableCell className="font-medium">{task.type}</TableCell>
+                                    <TableCell>{task.count}</TableCell>
+                                    <TableCell>{task.time} min</TableCell>
+                                    <TableCell className="text-right font-mono">₹{task.cost.toFixed(2)}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+            
+            <Card className="bg-primary/10 border-primary">
+                 <CardHeader>
+                    <CardTitle>Total Summary</CardTitle>
+                 </CardHeader>
+                 <CardContent className="space-y-4 text-lg">
+                    <div className="flex justify-between items-center font-semibold">
+                        <span>Total Fabrication Time:</span>
+                        <span>{calculatedResult.totalTime} minutes</span>
+                    </div>
+                     <div className="flex justify-between items-center font-bold text-2xl text-primary">
+                        <span>Grand Total Cost:</span>
+                        <span className="font-mono">₹{calculatedResult.totalCost.toFixed(2)}</span>
+                    </div>
+                 </CardContent>
+            </Card>
+        </div>
       )}
     </div>
   );

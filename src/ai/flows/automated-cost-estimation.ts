@@ -1,9 +1,9 @@
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow for automated cost estimation of fabrication projects based on an uploaded image containing project details.
+ * @fileOverview This file defines a Genkit flow for extracting fabrication project details from an image.
  *
- * - estimateFromImage - A function that calculates the estimated cost of a fabrication project from an image.
+ * - estimateFromImage - A function that extracts structured data about a fabrication project from an image.
  * - EstimateFromImageInput - The input type for the estimateFromImage function.
  * - EstimateFromImageOutput - The return type for the estimateFromImage function.
  */
@@ -21,18 +21,12 @@ const EstimateFromImageInputSchema = z.object({
 export type EstimateFromImageInput = z.infer<typeof EstimateFromImageInputSchema>;
 
 const EstimateFromImageOutputSchema = z.object({
-    givenMaterial: z.string().describe("The primary material mentioned in the image."),
-    materialCostPerUnit: z.string().describe("The cost per unit for the material, in Indian Rupees (₹) and including the unit."),
-    amountOfMaterialNeeded: z.string().describe("The quantity of material required, including units."),
-    totalMaterialCost: z.string().describe("Calculated as (Amount of material needed * Material cost per unit), in Indian Rupees (₹)."),
-    noOfCuttingsNeeded: z.string().describe("The number of cuts required."),
-    timePerCutting: z.string().describe("The time for a single cut, including units."),
-    totalTimeForCutting: z.string().describe("Calculated as (No of cuttings needed * Time per cutting)."),
-    chargePerCutting: z.string().describe("The cost for a single cut, in Indian Rupees (₹)."),
-    totalChargeForCutting: z.string().describe("Calculated as (No of cuttings needed * Charge per cutting), in Indian Rupees (₹)."),
-    totalNoOfLabour: z.string().describe("The total number of workers involved."),
-    finalFabricationTime: z.string().describe("The total estimated time for the project, including all processes."),
-    productHandoverDate: z.string().describe("A predicted completion and handover date, assuming the project starts today, June 25, 2025."),
+  material: z.string().describe("The primary material identified (e.g., Aluminum, Mild Steel)."),
+  material_length_ft: z.number().describe("The total length of material required, in feet."),
+  tasks: z.array(z.object({
+      type: z.string().describe("The type of fabrication task (e.g., Cutting, Welding)."),
+      count: z.number().describe("The quantity of this task (e.g., 70 cuts, 58 welds).")
+  })).describe("A list of all fabrication tasks and their quantities."),
 });
 export type EstimateFromImageOutput = z.infer<typeof EstimateFromImageOutputSchema>;
 
@@ -46,25 +40,26 @@ const prompt = ai.definePrompt({
   name: 'estimateFromImagePrompt',
   input: {schema: EstimateFromImageInputSchema},
   output: {schema: EstimateFromImageOutputSchema},
-  prompt: `You are an expert fabrication estimator. Analyze the provided image, which contains details about a fabrication project. Extract all relevant parameters, perform the necessary calculations, and provide a detailed cost and time breakdown. All cost-related fields must be in Indian Rupees (₹).
+  prompt: `You are a fabrication estimator.
 
-Image with project details: {{media url=imageDataUri}}
+Given a 3D model or sketch image of a frame or part, extract:
+- Material type (e.g., Aluminum, Mild Steel)
+- Total material length required in feet
+- Fabrication tasks involved (cutting, welding, etc.)
+- Quantity of each task (e.g., 70 cuts, 58 welds)
 
-From the image, identify and calculate the following, then provide the output in a clean JSON format. If a value is not present in the image, estimate it based on common fabrication standards.
+Respond only in this JSON format:
 
-- givenMaterial: The primary material mentioned.
-- materialCostPerUnit: The cost per unit for the material.
-- amountOfMaterialNeeded: The quantity of material required.
-- totalMaterialCost: Calculated as (Amount of material needed * Material cost per unit).
-- noOfCuttingsNeeded: The number of cuts required.
-- timePerCutting: The time for a single cut.
-- totalTimeForCutting: Calculated as (No of cuttings needed * Time per cutting).
-- chargePerCutting: The cost for a single cut.
-- totalChargeForCutting: Calculated as (No of cuttings needed * Charge per cutting).
-- totalNoOfLabour: The total number of workers involved.
-- finalFabricationTime: The total estimated time for the project, including all processes.
-- productHandoverDate: A predicted completion and handover date, assuming the project starts today. Today is June 25, 2025.
-`,
+{
+  "material": "Mild Steel",
+  "material_length_ft": 24,
+  "tasks": [
+    { "type": "Cutting", "count": 70 },
+    { "type": "Welding", "count": 58 }
+  ]
+}
+
+Image with project details: {{media url=imageDataUri}}`,
 });
 
 const estimateFromImageFlow = ai.defineFlow(
