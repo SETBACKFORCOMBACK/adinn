@@ -52,7 +52,7 @@ Respond only in this JSON format:
 
 {
   "material": "Mild Steel",
-  "material_length": 24,
+  "material_length": 4,
   "tasks": [
     { "type": "Cutting", "count": 70 },
     { "type": "Welding", "count": 58 }
