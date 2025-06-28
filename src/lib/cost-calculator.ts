@@ -53,30 +53,36 @@ export async function calculateFabricationCosts(geminiOutput: EstimateFromImageO
   const tasksBreakdown: CalculatedOutput['tasksBreakdown'] = [];
 
   geminiOutput.tasks.forEach(task => {
-    let entry = fabricationSheet.find(
-      item => item.type === task.type && item.material === geminiOutput.material
-    );
-    // If a specific material entry is not found, use a default one.
-    if (!entry) {
-        entry = fabricationSheet.find(item => item.type === task.type && item.material === "Default");
-    }
-
-    if (entry && entry.time_per_unit_min !== undefined && entry.cost_per_unit !== undefined) {
-        let time;
-        if (task.type === 'Cutting') {
-            time = 10;
-        } else if (task.type === 'Welding') {
-            time = 15;
-        } else {
-            // Fallback to original calculation for other potential tasks
-            time = task.count * entry.time_per_unit_min;
-        }
-
-        const cost = task.count * entry.cost_per_unit;
-
+    // The user provided fixed costs and times for Cutting and Welding,
+    // so we handle them specially.
+    if (task.type === 'Cutting') {
+        const time = 10; // Fixed 10 minutes
+        const cost = 16.70; // Fixed cost for cutting: ₹800/day -> ₹1.67/min * 10 min
         totalTime += time;
         totalFabricationCost += cost;
         tasksBreakdown.push({ type: task.type, count: task.count, time, cost });
+    } else if (task.type === 'Welding') {
+        const time = 15; // Fixed 15 minutes
+        const cost = 31.20; // Fixed cost for welding: ₹1000/day -> ₹2.08/min * 15 min
+        totalTime += time;
+        totalFabricationCost += cost;
+        tasksBreakdown.push({ type: task.type, count: task.count, time, cost });
+    } else {
+        // Fallback for any other tasks, using the original calculation method
+        let entry = fabricationSheet.find(
+          item => item.type === task.type && item.material === geminiOutput.material
+        );
+        if (!entry) {
+            entry = fabricationSheet.find(item => item.type === task.type && item.material === "Default");
+        }
+        
+        if (entry && entry.time_per_unit_min !== undefined && entry.cost_per_unit !== undefined) {
+            const time = task.count * entry.time_per_unit_min;
+            const cost = task.count * entry.cost_per_unit;
+            totalTime += time;
+            totalFabricationCost += cost;
+            tasksBreakdown.push({ type: task.type, count: task.count, time, cost });
+        }
     }
   });
 
