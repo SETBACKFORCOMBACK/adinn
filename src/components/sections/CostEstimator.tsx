@@ -136,9 +136,34 @@ export function CostEstimator() {
             </Card>
 
             <Card>
+              <CardHeader>
+                <CardTitle>Material Cost</CardTitle>
+                <CardDescription>Based on the material type and total length required.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Material</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead className="text-right">Total Cost</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="font-medium">{geminiResult.material}</TableCell>
+                      <TableCell>{geminiResult.material_length} length</TableCell>
+                      <TableCell className="text-right font-mono">₹{calculatedResult.materialCost.toFixed(2)}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            <Card>
                 <CardHeader>
-                    <CardTitle>Fabrication Cost & Time Breakdown</CardTitle>
-                    <CardDescription>Costs and times are based on the extracted data and predefined rates.</CardDescription>
+                    <CardTitle>Labor Charges & Time Breakdown</CardTitle>
+                    <CardDescription>Costs and times associated with fabrication tasks.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -151,12 +176,6 @@ export function CostEstimator() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <TableRow>
-                                <TableCell className="font-medium">Material</TableCell>
-                                <TableCell>{geminiResult.material_length} length</TableCell>
-                                <TableCell>N/A</TableCell>
-                                <TableCell className="text-right font-mono">₹{calculatedResult.materialCost.toFixed(2)}</TableCell>
-                            </TableRow>
                             {calculatedResult.tasksBreakdown.map(task => (
                                  <TableRow key={task.type}>
                                     <TableCell className="font-medium">{task.type}</TableCell>
