@@ -161,7 +161,7 @@ export function CostEstimator() {
             <Card>
               <CardHeader>
                 <CardTitle>Material Cost (Per Frame)</CardTitle>
-                <CardDescription>Based on the material type and total length required for one frame.</CardDescription>
+                <CardDescription>Based on the total length required for one frame. (Formula: ₹900 × Material Length)</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -186,7 +186,7 @@ export function CostEstimator() {
             <Card>
                 <CardHeader>
                     <CardTitle>Labor Charges & Time (Per Frame)</CardTitle>
-                    <CardDescription>Costs and times associated with fabrication tasks for one frame.</CardDescription>
+                    <CardDescription>Costs and times based on fixed rates (Cutting: 10min/₹16.70, Welding: 15min/₹31.20).</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -218,11 +218,11 @@ export function CostEstimator() {
                  </CardHeader>
                  <CardContent className="space-y-4 text-lg">
                     <div className="flex justify-between items-center font-semibold">
-                        <span>Total Fabrication Time:</span>
+                        <span>Total Fabrication Time <span className="text-sm font-normal text-muted-foreground">(Cutting + Welding)</span>:</span>
                         <span>{calculatedResult.totalTime} minutes</span>
                     </div>
                      <div className="flex justify-between items-center font-bold text-2xl">
-                        <span>Total Cost Per Frame:</span>
+                        <span>Total Cost Per Frame <span className="text-sm font-normal text-muted-foreground">(Material + Labor)</span>:</span>
                         <span className="font-mono">₹{calculatedResult.totalCost.toFixed(2)}</span>
                     </div>
                  </CardContent>
@@ -235,19 +235,19 @@ export function CostEstimator() {
                  </CardHeader>
                  <CardContent className="space-y-4 text-lg">
                     <div className="flex justify-between items-center font-semibold">
-                        <span>Total Project Time:</span>
+                        <span>Total Project Time <span className="text-sm font-normal text-muted-foreground">(Time/Frame × No. of Frames)</span>:</span>
                         <span>{(calculatedResult.totalTime * Number(numberOfFrames)).toFixed(0)} minutes</span>
                     </div>
                      <div className="flex justify-between items-center font-semibold">
-                        <span>Total Material Cost:</span>
+                        <span>Total Material Cost <span className="text-sm font-normal text-muted-foreground">(Cost/Frame × No. of Frames)</span>:</span>
                         <span className="font-mono">₹{(calculatedResult.materialCost * Number(numberOfFrames)).toFixed(2)}</span>
                     </div>
                      <div className="flex justify-between items-center font-semibold">
-                        <span>Total Labor Cost:</span>
+                        <span>Total Labor Cost <span className="text-sm font-normal text-muted-foreground">(Cost/Frame × No. of Frames)</span>:</span>
                         <span className="font-mono">₹{((calculatedResult.totalCost - calculatedResult.materialCost) * Number(numberOfFrames)).toFixed(2)}</span>
                     </div>
                      <div className="flex justify-between items-center font-bold text-2xl text-primary pt-4 border-t mt-4">
-                        <span>Grand Total Project Cost:</span>
+                        <span>Grand Total Project Cost <span className="text-sm font-normal text-muted-foreground">(Cost/Frame × No. of Frames)</span>:</span>
                         <span className="font-mono">₹{(calculatedResult.totalCost * Number(numberOfFrames)).toFixed(2)}</span>
                     </div>
                  </CardContent>
