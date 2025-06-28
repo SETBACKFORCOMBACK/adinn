@@ -113,6 +113,10 @@ export function CostEstimator() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                      <div className="flex justify-between items-center border-b pb-2">
+                        <span className="text-sm text-muted-foreground">Square pipe measurement</span>
+                        <span className="font-semibold">1 x 1</span>
+                     </div>
+                     <div className="flex justify-between items-center border-b pb-2">
                         <span className="text-sm text-muted-foreground">Material Type</span>
                         <Badge variant="secondary">{geminiResult.material}</Badge>
                      </div>
