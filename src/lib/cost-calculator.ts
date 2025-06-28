@@ -9,16 +9,19 @@ const fabricationSheet: CalculationSheetEntry[] = [
   { type: "Material", material: "Mild Steel", cost_per_foot: 150 },
   { type: "Cutting", material: "Mild Steel", time_per_unit_min: 2, cost_per_unit: 25 },
   { type: "Welding", material: "Mild Steel", time_per_unit_min: 5, cost_per_unit: 100 },
+  { type: "Frame Assembly", material: "Mild Steel", time_per_unit_min: 10, cost_per_unit: 120 },
   
   // Aluminum
   { type: "Material", material: "Aluminum", cost_per_foot: 250 },
   { type: "Cutting", material: "Aluminum", time_per_unit_min: 1.5, cost_per_unit: 30 },
   { type: "Welding", material: "Aluminum", time_per_unit_min: 7, cost_per_unit: 150 },
+  { type: "Frame Assembly", material: "Aluminum", time_per_unit_min: 12, cost_per_unit: 180 },
 
   // Default/Fallback values if material is not found
   { type: "Material", material: "Default", cost_per_foot: 100 },
   { type: "Cutting", material: "Default", time_per_unit_min: 3, cost_per_unit: 20 },
   { type: "Welding", material: "Default", time_per_unit_min: 6, cost_per_unit: 90 },
+  { type: "Frame Assembly", material: "Default", time_per_unit_min: 15, cost_per_unit: 100 },
 ];
 
 export interface CalculationSheetEntry {
@@ -69,6 +72,24 @@ export async function calculateFabricationCosts(geminiOutput: EstimateFromImageO
         tasksBreakdown.push({ type: task.type, count: task.count, time, cost });
     }
   });
+
+  // Add frame calculation
+  const numberOfFrames = 90;
+  let frameAssemblyEntry = fabricationSheet.find(
+    item => item.type === "Frame Assembly" && item.material === geminiOutput.material
+  );
+  if (!frameAssemblyEntry) {
+    frameAssemblyEntry = fabricationSheet.find(item => item.type === "Frame Assembly" && item.material === "Default");
+  }
+
+  if (frameAssemblyEntry && frameAssemblyEntry.time_per_unit_min !== undefined && frameAssemblyEntry.cost_per_unit !== undefined) {
+    const frameTime = numberOfFrames * frameAssemblyEntry.time_per_unit_min;
+    const frameCost = numberOfFrames * frameAssemblyEntry.cost_per_unit;
+    totalTime += frameTime;
+    totalFabricationCost += frameCost;
+    tasksBreakdown.push({ type: "Frame Assembly", count: numberOfFrames, time: frameTime, cost: frameCost });
+  }
+
 
   let materialEntry = fabricationSheet.find(
     i => i.material === geminiOutput.material && i.type === "Material"
