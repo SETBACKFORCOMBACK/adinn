@@ -203,7 +203,7 @@ export function CostEstimator() {
                                  <TableRow key={task.type}>
                                     <TableCell className="font-medium">{task.type}</TableCell>
                                     <TableCell>{task.count}</TableCell>
-                                    <TableCell>{task.time} min</TableCell>
+                                    <TableCell>{(task.time / 60).toFixed(2)} hours</TableCell>
                                     <TableCell className="text-right font-mono">₹{task.cost.toFixed(2)}</TableCell>
                                 </TableRow>
                             ))}
@@ -219,7 +219,7 @@ export function CostEstimator() {
                  <CardContent className="space-y-4 text-lg">
                     <div className="flex justify-between items-center font-semibold">
                         <span>Total Fabrication Time <span className="text-sm font-normal text-muted-foreground">(Cutting + Welding)</span>:</span>
-                        <span>{calculatedResult.totalTime} minutes</span>
+                        <span>{(calculatedResult.totalTime / 60).toFixed(2)} hours</span>
                     </div>
                      <div className="flex justify-between items-center font-bold text-2xl">
                         <span>Total Cost Per Frame <span className="text-sm font-normal text-muted-foreground">(Material + Labor)</span>:</span>
@@ -236,7 +236,7 @@ export function CostEstimator() {
                  <CardContent className="space-y-4 text-lg">
                     <div className="flex justify-between items-center font-semibold">
                         <span>Total Project Time <span className="text-sm font-normal text-muted-foreground">(Time/Frame × No. of Frames)</span>:</span>
-                        <span>{(calculatedResult.totalTime * Number(numberOfFrames)).toFixed(0)} minutes</span>
+                        <span>{((calculatedResult.totalTime * Number(numberOfFrames)) / 60).toFixed(2)} hours</span>
                     </div>
                      <div className="flex justify-between items-center font-semibold">
                         <span>Total Material Cost <span className="text-sm font-normal text-muted-foreground">(Cost/Frame × No. of Frames)</span>:</span>
