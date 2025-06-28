@@ -10,6 +10,8 @@ import Image from "next/image";
 import { calculateFabricationCosts, type CalculatedOutput } from "@/lib/cost-calculator";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 
 export function CostEstimator() {
@@ -18,6 +20,7 @@ export function CostEstimator() {
   const [isEstimating, setIsEstimating] = useState(false);
   const [geminiResult, setGeminiResult] = useState<EstimateFromImageOutput | null>(null);
   const [calculatedResult, setCalculatedResult] = useState<CalculatedOutput | null>(null);
+  const [numberOfFrames, setNumberOfFrames] = useState(1);
   
   const { toast } = useToast();
 
@@ -69,28 +72,44 @@ export function CostEstimator() {
     <div className="space-y-6 mt-6 max-w-4xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>Upload Project Details</CardTitle>
-          <CardDescription>Upload an image (e.g., a photo of a spec sheet, a diagram) containing the fabrication details.</CardDescription>
+          <CardTitle>1. Configure Your Project</CardTitle>
+          <CardDescription>Enter the total number of frames and upload an image of a single frame's specifications.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <label htmlFor="image-upload" className="block w-full cursor-pointer">
-            <div className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/30 rounded-lg p-8 hover:bg-muted/50 transition-colors">
-              {imagePreview ? (
-                <Image src={imagePreview} alt="Project preview" width={400} height={400} className="max-h-64 w-auto rounded-md object-contain" />
-              ) : (
-                <>
-                  <Upload className="w-12 h-12 text-muted-foreground" />
-                  <p className="mt-2 font-medium">Click to upload or drag and drop</p>
-                  <p className="text-sm text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
-                </>
-              )}
-            </div>
-          </label>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="number-of-frames" className="text-base">Number of Frames to Fabricate</Label>
+            <Input
+              id="number-of-frames"
+              type="number"
+              value={numberOfFrames}
+              onChange={(e) => setNumberOfFrames(Number(e.target.value) >= 1 ? Number(e.target.value) : 1)}
+              min="1"
+              className="max-w-[200px] text-lg"
+              placeholder="e.g., 10"
+            />
+          </div>
+
+          <div>
+             <Label htmlFor="image-upload" className="text-base">Project Details Image (Single Frame)</Label>
+              <label htmlFor="image-upload" className="block w-full cursor-pointer mt-2">
+                <div className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/30 rounded-lg p-8 hover:bg-muted/50 transition-colors">
+                  {imagePreview ? (
+                    <Image src={imagePreview} alt="Project preview" width={400} height={400} className="max-h-64 w-auto rounded-md object-contain" />
+                  ) : (
+                    <>
+                      <Upload className="w-12 h-12 text-muted-foreground" />
+                      <p className="mt-2 font-medium">Click to upload or drag and drop</p>
+                      <p className="text-sm text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
+                    </>
+                  )}
+                </div>
+              </label>
+          </div>
           <input id="image-upload" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
           
           <Button onClick={handleEstimate} disabled={isEstimating || !imageFile} className="w-full bg-accent hover:bg-accent/90 text-lg py-6 mt-4">
             {isEstimating ? <Loader2 className="animate-spin" /> : <Cpu className="mr-2" />}
-            Generate Estimate from Image
+            Generate Estimate
           </Button>
         </CardContent>
       </Card>
@@ -108,7 +127,7 @@ export function CostEstimator() {
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>AI Extraction Result</CardTitle>
+                    <CardTitle>AI Extraction Result (Per Frame)</CardTitle>
                     <CardDescription>The following details were extracted from your image by the AI.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -137,8 +156,8 @@ export function CostEstimator() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Material Cost</CardTitle>
-                <CardDescription>Based on the material type and total length required.</CardDescription>
+                <CardTitle>Material Cost (Per Frame)</CardTitle>
+                <CardDescription>Based on the material type and total length required for one frame.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -162,8 +181,8 @@ export function CostEstimator() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Labor Charges & Time Breakdown</CardTitle>
-                    <CardDescription>Costs and times associated with fabrication tasks.</CardDescription>
+                    <CardTitle>Labor Charges & Time (Per Frame)</CardTitle>
+                    <CardDescription>Costs and times associated with fabrication tasks for one frame.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -189,18 +208,43 @@ export function CostEstimator() {
                 </CardContent>
             </Card>
             
-            <Card className="bg-primary/10 border-primary">
+            <Card>
                  <CardHeader>
-                    <CardTitle>Total Summary</CardTitle>
+                    <CardTitle>Summary (Per Frame)</CardTitle>
                  </CardHeader>
                  <CardContent className="space-y-4 text-lg">
                     <div className="flex justify-between items-center font-semibold">
                         <span>Total Fabrication Time:</span>
                         <span>{calculatedResult.totalTime} minutes</span>
                     </div>
-                     <div className="flex justify-between items-center font-bold text-2xl text-primary">
-                        <span>Grand Total Cost:</span>
+                     <div className="flex justify-between items-center font-bold text-2xl">
+                        <span>Total Cost Per Frame:</span>
                         <span className="font-mono">₹{calculatedResult.totalCost.toFixed(2)}</span>
+                    </div>
+                 </CardContent>
+            </Card>
+
+            <Card className="bg-primary/10 border-primary">
+                 <CardHeader>
+                    <CardTitle className="text-primary">Total Project Estimate ({numberOfFrames} Frames)</CardTitle>
+                    <CardDescription>This is the final estimated cost and time for all frames combined.</CardDescription>
+                 </CardHeader>
+                 <CardContent className="space-y-4 text-lg">
+                    <div className="flex justify-between items-center font-semibold">
+                        <span>Total Project Time:</span>
+                        <span>{(calculatedResult.totalTime * numberOfFrames).toFixed(0)} minutes</span>
+                    </div>
+                     <div className="flex justify-between items-center font-semibold">
+                        <span>Total Material Cost:</span>
+                        <span className="font-mono">₹{(calculatedResult.materialCost * numberOfFrames).toFixed(2)}</span>
+                    </div>
+                     <div className="flex justify-between items-center font-semibold">
+                        <span>Total Labor Cost:</span>
+                        <span className="font-mono">₹{((calculatedResult.totalCost - calculatedResult.materialCost) * numberOfFrames).toFixed(2)}</span>
+                    </div>
+                     <div className="flex justify-between items-center font-bold text-2xl text-primary pt-4 border-t mt-4">
+                        <span>Grand Total Project Cost:</span>
+                        <span className="font-mono">₹{(calculatedResult.totalCost * numberOfFrames).toFixed(2)}</span>
                     </div>
                  </CardContent>
             </Card>
