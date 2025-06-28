@@ -6,17 +6,17 @@ import type {EstimateFromImageOutput} from '@/ai/flows/automated-cost-estimation
 // It is now internal to this module and not exported.
 const fabricationSheet: CalculationSheetEntry[] = [
   // Mild Steel
-  { type: "Material", material: "Mild Steel", cost_per_unit_length: 150 },
+  { type: "Material", material: "Mild Steel", cost_per_unit_length: 900 },
   { type: "Cutting", material: "Mild Steel", time_per_unit_min: 2, cost_per_unit: 25 },
   { type: "Welding", material: "Mild Steel", time_per_unit_min: 5, cost_per_unit: 100 },
   
   // Aluminum
-  { type: "Material", material: "Aluminum", cost_per_unit_length: 250 },
+  { type: "Material", material: "Aluminum", cost_per_unit_length: 900 },
   { type: "Cutting", material: "Aluminum", time_per_unit_min: 1.5, cost_per_unit: 30 },
   { type: "Welding", material: "Aluminum", time_per_unit_min: 7, cost_per_unit: 150 },
 
   // Default/Fallback values if material is not found
-  { type: "Material", material: "Default", cost_per_unit_length: 100 },
+  { type: "Material", material: "Default", cost_per_unit_length: 900 },
   { type: "Cutting", material: "Default", time_per_unit_min: 3, cost_per_unit: 20 },
   { type: "Welding", material: "Default", time_per_unit_min: 6, cost_per_unit: 90 },
 ];
