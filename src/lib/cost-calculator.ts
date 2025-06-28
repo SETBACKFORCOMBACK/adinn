@@ -62,7 +62,16 @@ export async function calculateFabricationCosts(geminiOutput: EstimateFromImageO
     }
 
     if (entry && entry.time_per_unit_min !== undefined && entry.cost_per_unit !== undefined) {
-        const time = task.count * entry.time_per_unit_min;
+        let time;
+        if (task.type === 'Cutting') {
+            time = 10;
+        } else if (task.type === 'Welding') {
+            time = 15;
+        } else {
+            // Fallback to original calculation for other potential tasks
+            time = task.count * entry.time_per_unit_min;
+        }
+
         const cost = task.count * entry.cost_per_unit;
 
         totalTime += time;
