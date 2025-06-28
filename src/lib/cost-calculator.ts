@@ -6,19 +6,19 @@ import type {EstimateFromImageOutput} from '@/ai/flows/automated-cost-estimation
 // It is now internal to this module and not exported.
 const fabricationSheet: CalculationSheetEntry[] = [
   // Mild Steel
-  { type: "Material", material: "Mild Steel", cost_per_foot: 150 },
+  { type: "Material", material: "Mild Steel", cost_per_unit_length: 150 },
   { type: "Cutting", material: "Mild Steel", time_per_unit_min: 2, cost_per_unit: 25 },
   { type: "Welding", material: "Mild Steel", time_per_unit_min: 5, cost_per_unit: 100 },
   { type: "Frame Assembly", material: "Mild Steel", time_per_unit_min: 10, cost_per_unit: 120 },
   
   // Aluminum
-  { type: "Material", material: "Aluminum", cost_per_foot: 250 },
+  { type: "Material", material: "Aluminum", cost_per_unit_length: 250 },
   { type: "Cutting", material: "Aluminum", time_per_unit_min: 1.5, cost_per_unit: 30 },
   { type: "Welding", material: "Aluminum", time_per_unit_min: 7, cost_per_unit: 150 },
   { type: "Frame Assembly", material: "Aluminum", time_per_unit_min: 12, cost_per_unit: 180 },
 
   // Default/Fallback values if material is not found
-  { type: "Material", material: "Default", cost_per_foot: 100 },
+  { type: "Material", material: "Default", cost_per_unit_length: 100 },
   { type: "Cutting", material: "Default", time_per_unit_min: 3, cost_per_unit: 20 },
   { type: "Welding", material: "Default", time_per_unit_min: 6, cost_per_unit: 90 },
   { type: "Frame Assembly", material: "Default", time_per_unit_min: 15, cost_per_unit: 100 },
@@ -27,7 +27,7 @@ const fabricationSheet: CalculationSheetEntry[] = [
 export interface CalculationSheetEntry {
     type: string;
     material: string;
-    cost_per_foot?: number;
+    cost_per_unit_length?: number;
     time_per_unit_min?: number;
     cost_per_unit?: number;
 }
@@ -99,8 +99,8 @@ export async function calculateFabricationCosts(geminiOutput: EstimateFromImageO
    }
   
   let materialCost = 0;
-  if (materialEntry && materialEntry.cost_per_foot !== undefined) {
-      materialCost = geminiOutput.material_length_ft * materialEntry.cost_per_foot;
+  if (materialEntry && materialEntry.cost_per_unit_length !== undefined) {
+      materialCost = geminiOutput.material_length * materialEntry.cost_per_unit_length;
   }
 
   const totalCost = totalFabricationCost + materialCost;

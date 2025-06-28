@@ -122,7 +122,7 @@ export function CostEstimator() {
                      </div>
                      <div className="flex justify-between items-center border-b pb-2">
                         <span className="text-sm text-muted-foreground">Material Length</span>
-                        <span className="font-semibold">{geminiResult.material_length_ft} ft</span>
+                        <span className="font-semibold">{geminiResult.material_length} length</span>
                      </div>
                      <div>
                         <span className="text-sm text-muted-foreground">Identified Tasks</span>
@@ -153,7 +153,7 @@ export function CostEstimator() {
                         <TableBody>
                             <TableRow>
                                 <TableCell className="font-medium">Material</TableCell>
-                                <TableCell>{geminiResult.material_length_ft} ft</TableCell>
+                                <TableCell>{geminiResult.material_length} length</TableCell>
                                 <TableCell>N/A</TableCell>
                                 <TableCell className="text-right font-mono">₹{calculatedResult.materialCost.toFixed(2)}</TableCell>
                             </TableRow>
