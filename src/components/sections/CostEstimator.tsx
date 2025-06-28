@@ -20,7 +20,7 @@ export function CostEstimator() {
   const [isEstimating, setIsEstimating] = useState(false);
   const [geminiResult, setGeminiResult] = useState<EstimateFromImageOutput | null>(null);
   const [calculatedResult, setCalculatedResult] = useState<CalculatedOutput | null>(null);
-  const [numberOfFrames, setNumberOfFrames] = useState(1);
+  const [numberOfFrames, setNumberOfFrames] = useState<number | ''>('');
   
   const { toast } = useToast();
 
@@ -42,6 +42,10 @@ export function CostEstimator() {
     if (!imageFile) {
       toast({ variant: "destructive", title: "No Image Selected", description: "Please upload an image with project details." });
       return;
+    }
+    if (!numberOfFrames || Number(numberOfFrames) < 1) {
+        toast({ variant: "destructive", title: "Invalid Number of Frames", description: "Please enter a valid number of frames to fabricate." });
+        return;
     }
 
     setIsEstimating(true);
@@ -82,7 +86,7 @@ export function CostEstimator() {
               id="number-of-frames"
               type="number"
               value={numberOfFrames}
-              onChange={(e) => setNumberOfFrames(Number(e.target.value) >= 1 ? Number(e.target.value) : 1)}
+              onChange={(e) => setNumberOfFrames(e.target.value === '' ? '' : Number(e.target.value))}
               min="1"
               className="max-w-[200px] text-lg"
               placeholder="e.g., 10"
@@ -107,7 +111,7 @@ export function CostEstimator() {
           </div>
           <input id="image-upload" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
           
-          <Button onClick={handleEstimate} disabled={isEstimating || !imageFile} className="w-full bg-accent hover:bg-accent/90 text-lg py-6 mt-4">
+          <Button onClick={handleEstimate} disabled={isEstimating || !imageFile || !numberOfFrames || Number(numberOfFrames) < 1} className="w-full bg-accent hover:bg-accent/90 text-lg py-6 mt-4">
             {isEstimating ? <Loader2 className="animate-spin" /> : <Cpu className="mr-2" />}
             Generate Estimate
           </Button>
@@ -123,7 +127,7 @@ export function CostEstimator() {
         </Card>
       )}
 
-      {geminiResult && calculatedResult && (
+      {geminiResult && calculatedResult && numberOfFrames && (
         <div className="space-y-6">
             <Card>
                 <CardHeader>
@@ -232,19 +236,19 @@ export function CostEstimator() {
                  <CardContent className="space-y-4 text-lg">
                     <div className="flex justify-between items-center font-semibold">
                         <span>Total Project Time:</span>
-                        <span>{(calculatedResult.totalTime * numberOfFrames).toFixed(0)} minutes</span>
+                        <span>{(calculatedResult.totalTime * Number(numberOfFrames)).toFixed(0)} minutes</span>
                     </div>
                      <div className="flex justify-between items-center font-semibold">
                         <span>Total Material Cost:</span>
-                        <span className="font-mono">₹{(calculatedResult.materialCost * numberOfFrames).toFixed(2)}</span>
+                        <span className="font-mono">₹{(calculatedResult.materialCost * Number(numberOfFrames)).toFixed(2)}</span>
                     </div>
                      <div className="flex justify-between items-center font-semibold">
                         <span>Total Labor Cost:</span>
-                        <span className="font-mono">₹{((calculatedResult.totalCost - calculatedResult.materialCost) * numberOfFrames).toFixed(2)}</span>
+                        <span className="font-mono">₹{((calculatedResult.totalCost - calculatedResult.materialCost) * Number(numberOfFrames)).toFixed(2)}</span>
                     </div>
                      <div className="flex justify-between items-center font-bold text-2xl text-primary pt-4 border-t mt-4">
                         <span>Grand Total Project Cost:</span>
-                        <span className="font-mono">₹{(calculatedResult.totalCost * numberOfFrames).toFixed(2)}</span>
+                        <span className="font-mono">₹{(calculatedResult.totalCost * Number(numberOfFrames)).toFixed(2)}</span>
                     </div>
                  </CardContent>
             </Card>
