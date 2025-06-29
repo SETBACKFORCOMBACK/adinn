@@ -64,9 +64,9 @@ export function CostEstimator() {
       setGeminiResult(result);
       
       const calculated = await calculateFabricationCosts(result, {
-        materialLength: materialLength !== '' ? materialLength : undefined,
-        cuttingTime: cuttingTime !== '' ? cuttingTime : undefined,
-        weldingTime: weldingTime !== '' ? weldingTime : undefined,
+        materialLength: materialLength !== '' ? materialLength : result.material_length,
+        cuttingTime: cuttingTime !== '' ? cuttingTime : 10,
+        weldingTime: weldingTime !== '' ? weldingTime : 15,
       });
       setCalculatedResult(calculated);
 

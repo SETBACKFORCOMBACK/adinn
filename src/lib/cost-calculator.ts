@@ -23,9 +23,9 @@ export interface CalculationSheetEntry {
 }
 
 export interface CalculationOptions {
-    materialLength?: number;
-    cuttingTime?: number;
-    weldingTime?: number;
+    materialLength: number;
+    cuttingTime: number;
+    weldingTime: number;
 }
 
 export interface CalculatedOutput {
@@ -45,12 +45,12 @@ export interface CalculatedOutput {
  * Calculates fabrication costs based on Gemini output and the internal cost/time sheet.
  * This calculates the cost for a SINGLE item/frame.
  * @param geminiOutput - The structured data extracted by the AI for a single frame.
- * @param options - Optional manual overrides for material length and task times.
+ * @param options - Manual overrides for material length and task times.
  * @returns A detailed breakdown of costs and time for one frame.
  */
 export async function calculateFabricationCosts(
   geminiOutput: EstimateFromImageOutput,
-  options: CalculationOptions = {}
+  options: CalculationOptions
 ): Promise<CalculatedOutput> {
   let totalTime = 0;
   let totalFabricationCost = 0;
@@ -58,13 +58,13 @@ export async function calculateFabricationCosts(
 
   geminiOutput.tasks.forEach(task => {
     if (task.type === 'Cutting') {
-        const time = options.cuttingTime ?? 10;
+        const time = options.cuttingTime;
         const cost = 16.70;
         totalTime += time;
         totalFabricationCost += cost;
         tasksBreakdown.push({ type: task.type, count: task.count, time, cost });
     } else if (task.type === 'Welding') {
-        const time = options.weldingTime ?? 15;
+        const time = options.weldingTime;
         const cost = 31.20;
         totalTime += time;
         totalFabricationCost += cost;
@@ -94,7 +94,7 @@ export async function calculateFabricationCosts(
         materialEntry = fabricationSheet.find(i => i.material === "Default" && i.type === "Material");
    }
   
-  const effectiveMaterialLength = options.materialLength ?? geminiOutput.material_length;
+  const effectiveMaterialLength = options.materialLength;
   let materialCost = 0;
   if (materialEntry && materialEntry.cost_per_unit_length !== undefined) {
       materialCost = effectiveMaterialLength * materialEntry.cost_per_unit_length;
