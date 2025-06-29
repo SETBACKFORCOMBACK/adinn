@@ -33,6 +33,9 @@ export interface CalculatedOutput {
     totalTime: number;
     totalCost: number;
     materialCost: number;
+    totalLaborCost: number;
+    finishingCost: number;
+    transportCost: number;
     tasksBreakdown: Array<{
         type: string;
         count: number;
@@ -53,42 +56,38 @@ export async function calculateFabricationCosts(
   options: CalculationOptions
 ): Promise<CalculatedOutput> {
   let totalTime = 0;
-  let totalFabricationCost = 0;
   const tasksBreakdown: CalculatedOutput['tasksBreakdown'] = [];
+
+  const cuttingCost = 43.25;
+  const weldingCost = 60.00;
 
   geminiOutput.tasks.forEach(task => {
     if (task.type === 'Cutting') {
         const time = options.cuttingTime;
-        const cost = 43.25;
         totalTime += time;
-        totalFabricationCost += cost;
-        tasksBreakdown.push({ type: task.type, count: task.count, time, cost });
+        tasksBreakdown.push({ type: task.type, count: task.count, time, cost: cuttingCost });
     } else if (task.type === 'Welding') {
         const time = options.weldingTime;
-        const cost = 60.00;
         totalTime += time;
-        totalFabricationCost += cost;
-        tasksBreakdown.push({ type: task.type, count: task.count, time, cost });
-    } else {
-        let entry = fabricationSheet.find(
-          item => item.type === task.type && item.material === geminiOutput.material
-        );
-        if (!entry) {
-            entry = fabricationSheet.find(item => item.type === task.type && item.material === "Default");
-        }
-        
-        if (entry && entry.time_per_unit_min !== undefined && entry.cost_per_unit !== undefined) {
-            const time = task.count * entry.time_per_unit_min;
-            const cost = task.count * entry.cost_per_unit;
-            totalTime += time;
-            totalFabricationCost += cost;
-            tasksBreakdown.push({ type: task.type, count: task.count, time, cost });
-        }
+        tasksBreakdown.push({ type: task.type, count: task.count, time, cost: weldingCost });
     }
   });
 
-  const materialCost = options.materialLength * 900;
-  const totalCost = totalFabricationCost + materialCost;
+  const totalLaborCost = cuttingCost + weldingCost;
+  const finishingCost = totalLaborCost * 0.50;
+  const transportCost = 300;
 
-  return { materialLength: options.materialLength, totalTime, totalCost, materialCost, tasksBreakdown };
+  const materialCost = options.materialLength * 900;
+  const totalCost = totalLaborCost + finishingCost + materialCost + transportCost;
+
+  return { 
+      materialLength: options.materialLength, 
+      totalTime, 
+      totalCost, 
+      materialCost,
+      totalLaborCost,
+      finishingCost,
+      transportCost,
+      tasksBreakdown 
+  };
 }

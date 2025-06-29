@@ -22,8 +22,8 @@ export function CostEstimator() {
   const [calculatedResult, setCalculatedResult] = useState<CalculatedOutput | null>(null);
   const [numberOfFrames, setNumberOfFrames] = useState<number | ''>('');
   const [materialLength, setMaterialLength] = useState<number | ''>('');
-  const [cuttingTime, setCuttingTime] = useState<number | ''>('');
-  const [weldingTime, setWeldingTime] = useState<number | ''>('');
+  const [cuttingTime, setCuttingTime] = useState<number | ''>(25);
+  const [weldingTime, setWeldingTime] = useState<number | ''>(30);
   
   const { toast } = useToast();
 
@@ -230,7 +230,7 @@ export function CostEstimator() {
             <Card>
                 <CardHeader>
                     <CardTitle>Labor Charges & Time (Per Frame)</CardTitle>
-                    <CardDescription>Enter time for estimation. Labor charges are fixed (Cutting: ₹43.25, Welding: ₹60.00).</CardDescription>
+                    <CardDescription>Time is for estimation. Labor charges are fixed (Cutting: ₹43.25, Welding: ₹60.00).</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -255,6 +255,35 @@ export function CostEstimator() {
                     </Table>
                 </CardContent>
             </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Additional Costs (Per Frame)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Item</TableHead>
+                                <TableHead>Description</TableHead>
+                                <TableHead className="text-right">Cost</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow>
+                                <TableCell className="font-medium">Finishing</TableCell>
+                                <TableCell>50% of Labor Cost (Cutting + Welding)</TableCell>
+                                <TableCell className="text-right font-mono">₹{calculatedResult.finishingCost.toFixed(2)}</TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell className="font-medium">Transport</TableCell>
+                                <TableCell>Fixed charge per frame</TableCell>
+                                <TableCell className="text-right font-mono">₹{calculatedResult.transportCost.toFixed(2)}</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
             
             <Card>
                  <CardHeader>
@@ -266,7 +295,7 @@ export function CostEstimator() {
                         <span>{calculatedResult.totalTime} minutes</span>
                     </div>
                      <div className="flex justify-between items-center font-bold text-2xl">
-                        <span>Total Cost Per Frame <span className="text-sm font-normal text-muted-foreground">(Material + Labor)</span>:</span>
+                        <span>Total Cost Per Frame <span className="text-sm font-normal text-muted-foreground">(Material + Labor + Additional)</span>:</span>
                         <span className="font-mono">₹{calculatedResult.totalCost.toFixed(2)}</span>
                     </div>
                  </CardContent>
@@ -280,7 +309,7 @@ export function CostEstimator() {
                  <CardContent className="space-y-4 text-lg">
                     <div className="flex justify-between items-center font-semibold">
                         <span>Total Project Time <span className="text-sm font-normal text-muted-foreground">(Time/Frame × No. of Frames)</span>:</span>
-                        <span>{calculatedResult.totalTime * Number(numberOfFrames)} minutes</span>
+                        <span>{(calculatedResult.totalTime * Number(numberOfFrames)).toFixed(2)} minutes</span>
                     </div>
                      <div className="flex justify-between items-center font-semibold">
                         <span>Total Material Cost <span className="text-sm font-normal text-muted-foreground">(Cost/Frame × No. of Frames)</span>:</span>
@@ -288,7 +317,15 @@ export function CostEstimator() {
                     </div>
                      <div className="flex justify-between items-center font-semibold">
                         <span>Total Labor Cost <span className="text-sm font-normal text-muted-foreground">(Cost/Frame × No. of Frames)</span>:</span>
-                        <span className="font-mono">₹{((calculatedResult.totalCost - calculatedResult.materialCost) * Number(numberOfFrames)).toFixed(2)}</span>
+                        <span className="font-mono">₹{(calculatedResult.totalLaborCost * Number(numberOfFrames)).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center font-semibold">
+                        <span>Total Finishing Cost <span className="text-sm font-normal text-muted-foreground">(Cost/Frame × No. of Frames)</span>:</span>
+                        <span className="font-mono">₹{(calculatedResult.finishingCost * Number(numberOfFrames)).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center font-semibold">
+                        <span>Total Transport Cost <span className="text-sm font-normal text-muted-foreground">(Cost/Frame × No. of Frames)</span>:</span>
+                        <span className="font-mono">₹{(calculatedResult.transportCost * Number(numberOfFrames)).toFixed(2)}</span>
                     </div>
                      <div className="flex justify-between items-center font-bold text-2xl text-primary pt-4 border-t mt-4">
                         <span>Grand Total Project Cost <span className="text-sm font-normal text-muted-foreground">(Cost/Frame × No. of Frames)</span>:</span>
