@@ -41,6 +41,9 @@ export interface CalculatedOutput {
     }>;
 }
 
+const CUTTING_COST_PER_MINUTE = 1.67;
+const WELDING_COST_PER_MINUTE = 2.08;
+
 /**
  * Calculates fabrication costs based on Gemini output and the internal cost/time sheet.
  * This calculates the cost for a SINGLE item/frame.
@@ -59,13 +62,13 @@ export async function calculateFabricationCosts(
   geminiOutput.tasks.forEach(task => {
     if (task.type === 'Cutting') {
         const time = options.cuttingTime;
-        const cost = 16.70;
+        const cost = time * CUTTING_COST_PER_MINUTE;
         totalTime += time;
         totalFabricationCost += cost;
         tasksBreakdown.push({ type: task.type, count: task.count, time, cost });
     } else if (task.type === 'Welding') {
         const time = options.weldingTime;
-        const cost = 31.20;
+        const cost = time * WELDING_COST_PER_MINUTE;
         totalTime += time;
         totalFabricationCost += cost;
         tasksBreakdown.push({ type: task.type, count: task.count, time, cost });
