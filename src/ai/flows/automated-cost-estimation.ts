@@ -23,6 +23,7 @@ export type EstimateFromImageInput = z.infer<typeof EstimateFromImageInputSchema
 const EstimateFromImageOutputSchema = z.object({
   material: z.string().describe("The primary material identified (e.g., Aluminum, Mild Steel)."),
   material_length: z.number().describe("The total length of material required."),
+  pipe_measurement: z.string().describe("The measurement of the square pipe used (e.g., '1 x 1', '2 x 2')."),
   tasks: z.array(z.object({
       type: z.string().describe("The type of fabrication task (e.g., Cutting, Welding)."),
       count: z.number().describe("The quantity of this task (e.g., 70 cuts, 58 welds).")
@@ -45,6 +46,7 @@ const prompt = ai.definePrompt({
 Given a 3D model or sketch image of a frame or part, extract:
 - Material type (e.g., Aluminum, Mild Steel)
 - Total material length required
+- Square pipe measurement (e.g., "1 x 1")
 - Fabrication tasks involved (cutting, welding, etc.)
 - Quantity of each task (e.g., 70 cuts, 58 welds)
 
@@ -53,6 +55,7 @@ Respond only in this JSON format:
 {
   "material": "Mild Steel",
   "material_length": 4,
+  "pipe_measurement": "1 x 1",
   "tasks": [
     { "type": "Cutting", "count": 70 },
     { "type": "Welding", "count": 58 }

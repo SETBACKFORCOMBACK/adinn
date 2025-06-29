@@ -194,7 +194,7 @@ export function CostEstimator() {
                 <CardContent className="space-y-4">
                      <div className="flex justify-between items-center border-b pb-2">
                         <span className="text-sm text-muted-foreground">Square pipe measurement</span>
-                        <span className="font-semibold">1 x 1</span>
+                        <span className="font-semibold">{geminiResult.pipe_measurement}</span>
                      </div>
                      <div className="flex justify-between items-center border-b pb-2">
                         <span className="text-sm text-muted-foreground">Material Type</span>
