@@ -230,7 +230,7 @@ export function CostEstimator() {
             <Card>
                 <CardHeader>
                     <CardTitle>Labor Charges & Time (Per Frame)</CardTitle>
-                    <CardDescription>Costs are calculated based on time input (Rates: Cutting @ ₹1.67/min, Welding @ ₹2.08/min).</CardDescription>
+                    <CardDescription>Costs are calculated based on time input (Rates: Cutting @ ₹1.73/min, Welding @ ₹2.08/min).</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
