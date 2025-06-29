@@ -21,6 +21,9 @@ export function CostEstimator() {
   const [geminiResult, setGeminiResult] = useState<EstimateFromImageOutput | null>(null);
   const [calculatedResult, setCalculatedResult] = useState<CalculatedOutput | null>(null);
   const [numberOfFrames, setNumberOfFrames] = useState<number | ''>('');
+  const [materialLength, setMaterialLength] = useState<number | ''>('');
+  const [cuttingTime, setCuttingTime] = useState<number | ''>('');
+  const [weldingTime, setWeldingTime] = useState<number | ''>('');
   
   const { toast } = useToast();
 
@@ -60,7 +63,11 @@ export function CostEstimator() {
       const result = await estimateFromImage({ imageDataUri: imagePreview });
       setGeminiResult(result);
       
-      const calculated = await calculateFabricationCosts(result);
+      const calculated = await calculateFabricationCosts(result, {
+        materialLength: materialLength !== '' ? materialLength : undefined,
+        cuttingTime: cuttingTime !== '' ? cuttingTime : undefined,
+        weldingTime: weldingTime !== '' ? weldingTime : undefined,
+      });
       setCalculatedResult(calculated);
 
       toast({ title: "Estimation Complete", description: "The project details have been extracted and calculated." });
@@ -77,7 +84,7 @@ export function CostEstimator() {
       <Card>
         <CardHeader>
           <CardTitle>1. Configure Your Project</CardTitle>
-          <CardDescription>Enter the total number of frames and upload an image of a single frame's specifications.</CardDescription>
+          <CardDescription>Enter project details below. Values for length and time can be manually entered to override AI-assisted estimates.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -92,6 +99,43 @@ export function CostEstimator() {
               placeholder="e.g., 10"
             />
           </div>
+
+          <div className="grid md:grid-cols-3 gap-6 pt-4 border-t">
+              <div className="space-y-2">
+                <Label htmlFor="material-length">Material Length</Label>
+                <Input
+                  id="material-length"
+                  type="number"
+                  value={materialLength}
+                  onChange={(e) => setMaterialLength(e.target.value === '' ? '' : Number(e.target.value))}
+                  placeholder="Leave blank for AI"
+                />
+                <p className="text-xs text-muted-foreground">Total length per frame.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cutting-time">Cutting Time</Label>
+                <Input
+                  id="cutting-time"
+                  type="number"
+                  value={cuttingTime}
+                  onChange={(e) => setCuttingTime(e.target.value === '' ? '' : Number(e.target.value))}
+                  placeholder="Default: 10"
+                />
+                 <p className="text-xs text-muted-foreground">Mins per frame.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="welding-time">Welding Time</Label>
+                <Input
+                  id="welding-time"
+                  type="number"
+                  value={weldingTime}
+                  onChange={(e) => setWeldingTime(e.target.value === '' ? '' : Number(e.target.value))}
+                  placeholder="Default: 15"
+                />
+                 <p className="text-xs text-muted-foreground">Mins per frame.</p>
+              </div>
+          </div>
+
 
           <div>
              <Label htmlFor="image-upload" className="text-base">Project Details Image (Single Frame)</Label>
@@ -145,7 +189,7 @@ export function CostEstimator() {
                      </div>
                      <div className="flex justify-between items-center border-b pb-2">
                         <span className="text-sm text-muted-foreground">Material Length</span>
-                        <span className="font-semibold">{geminiResult.material_length} length</span>
+                        <span className="font-semibold">{calculatedResult.materialLength} length</span>
                      </div>
                      <div>
                         <span className="text-sm text-muted-foreground">Identified Tasks</span>
@@ -175,7 +219,7 @@ export function CostEstimator() {
                   <TableBody>
                     <TableRow>
                       <TableCell className="font-medium">{geminiResult.material}</TableCell>
-                      <TableCell>{geminiResult.material_length} length</TableCell>
+                      <TableCell>{calculatedResult.materialLength} length</TableCell>
                       <TableCell className="text-right font-mono">₹{calculatedResult.materialCost.toFixed(2)}</TableCell>
                     </TableRow>
                   </TableBody>

@@ -2,20 +2,13 @@
 
 import type {EstimateFromImageOutput} from '@/ai/flows/automated-cost-estimation';
 
-// This is a mock lookup table for costs and times based on material and task.
-// It is now internal to this module and not exported.
 const fabricationSheet: CalculationSheetEntry[] = [
-  // Mild Steel
   { type: "Material", material: "Mild Steel", cost_per_unit_length: 900 },
   { type: "Cutting", material: "Mild Steel", time_per_unit_min: 2, cost_per_unit: 25 },
   { type: "Welding", material: "Mild Steel", time_per_unit_min: 5, cost_per_unit: 100 },
-  
-  // Aluminum
   { type: "Material", material: "Aluminum", cost_per_unit_length: 900 },
   { type: "Cutting", material: "Aluminum", time_per_unit_min: 1.5, cost_per_unit: 30 },
   { type: "Welding", material: "Aluminum", time_per_unit_min: 7, cost_per_unit: 150 },
-
-  // Default/Fallback values if material is not found
   { type: "Material", material: "Default", cost_per_unit_length: 900 },
   { type: "Cutting", material: "Default", time_per_unit_min: 3, cost_per_unit: 20 },
   { type: "Welding", material: "Default", time_per_unit_min: 6, cost_per_unit: 90 },
@@ -29,7 +22,14 @@ export interface CalculationSheetEntry {
     cost_per_unit?: number;
 }
 
+export interface CalculationOptions {
+    materialLength?: number;
+    cuttingTime?: number;
+    weldingTime?: number;
+}
+
 export interface CalculatedOutput {
+    materialLength: number;
     totalTime: number;
     totalCost: number;
     materialCost: number;
@@ -45,30 +45,31 @@ export interface CalculatedOutput {
  * Calculates fabrication costs based on Gemini output and the internal cost/time sheet.
  * This calculates the cost for a SINGLE item/frame.
  * @param geminiOutput - The structured data extracted by the AI for a single frame.
+ * @param options - Optional manual overrides for material length and task times.
  * @returns A detailed breakdown of costs and time for one frame.
  */
-export async function calculateFabricationCosts(geminiOutput: EstimateFromImageOutput): Promise<CalculatedOutput> {
+export async function calculateFabricationCosts(
+  geminiOutput: EstimateFromImageOutput,
+  options: CalculationOptions = {}
+): Promise<CalculatedOutput> {
   let totalTime = 0;
   let totalFabricationCost = 0;
   const tasksBreakdown: CalculatedOutput['tasksBreakdown'] = [];
 
   geminiOutput.tasks.forEach(task => {
-    // The user provided fixed costs and times for Cutting and Welding,
-    // so we handle them specially.
     if (task.type === 'Cutting') {
-        const time = 10; // Fixed 10 minutes
-        const cost = 16.70; // Fixed cost for cutting: ₹800/day -> ₹1.67/min * 10 min
+        const time = options.cuttingTime ?? 10;
+        const cost = 16.70;
         totalTime += time;
         totalFabricationCost += cost;
         tasksBreakdown.push({ type: task.type, count: task.count, time, cost });
     } else if (task.type === 'Welding') {
-        const time = 15; // Fixed 15 minutes
-        const cost = 31.20; // Fixed cost for welding: ₹1000/day -> ₹2.08/min * 15 min
+        const time = options.weldingTime ?? 15;
+        const cost = 31.20;
         totalTime += time;
         totalFabricationCost += cost;
         tasksBreakdown.push({ type: task.type, count: task.count, time, cost });
     } else {
-        // Fallback for any other tasks, using the original calculation method
         let entry = fabricationSheet.find(
           item => item.type === task.type && item.material === geminiOutput.material
         );
@@ -93,12 +94,13 @@ export async function calculateFabricationCosts(geminiOutput: EstimateFromImageO
         materialEntry = fabricationSheet.find(i => i.material === "Default" && i.type === "Material");
    }
   
+  const effectiveMaterialLength = options.materialLength ?? geminiOutput.material_length;
   let materialCost = 0;
   if (materialEntry && materialEntry.cost_per_unit_length !== undefined) {
-      materialCost = geminiOutput.material_length * materialEntry.cost_per_unit_length;
+      materialCost = effectiveMaterialLength * materialEntry.cost_per_unit_length;
   }
 
   const totalCost = totalFabricationCost + materialCost;
 
-  return { totalTime, totalCost, materialCost, tasksBreakdown };
+  return { materialLength: effectiveMaterialLength, totalTime, totalCost, materialCost, tasksBreakdown };
 }
