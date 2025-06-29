@@ -35,7 +35,7 @@ export interface CalculatedOutput {
     materialCost: number;
     totalLaborCost: number;
     finishingCost: number;
-    transportCost: number;
+    additionalCompensationCharge: number;
     tasksBreakdown: Array<{
         type: string;
         count: number;
@@ -75,10 +75,10 @@ export async function calculateFabricationCosts(
 
   const totalLaborCost = cuttingCost + weldingCost;
   const finishingCost = totalLaborCost * 0.50;
-  const transportCost = 300;
+  const additionalCompensationCharge = 100;
 
   const materialCost = options.materialLength * 900;
-  const totalCost = totalLaborCost + finishingCost + materialCost + transportCost;
+  const totalCost = totalLaborCost + finishingCost + materialCost + additionalCompensationCharge;
 
   return { 
       materialLength: options.materialLength, 
@@ -87,7 +87,7 @@ export async function calculateFabricationCosts(
       materialCost,
       totalLaborCost,
       finishingCost,
-      transportCost,
+      additionalCompensationCharge,
       tasksBreakdown 
   };
 }

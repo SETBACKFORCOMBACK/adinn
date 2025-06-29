@@ -276,9 +276,9 @@ export function CostEstimator() {
                                 <TableCell className="text-right font-mono">₹{calculatedResult.finishingCost.toFixed(2)}</TableCell>
                             </TableRow>
                              <TableRow>
-                                <TableCell className="font-medium">Transport</TableCell>
-                                <TableCell>Fixed charge per frame</TableCell>
-                                <TableCell className="text-right font-mono">₹{calculatedResult.transportCost.toFixed(2)}</TableCell>
+                                <TableCell className="font-medium">Additional Compensation Charge</TableCell>
+                                <TableCell>Fixed additional charge</TableCell>
+                                <TableCell className="text-right font-mono">₹{calculatedResult.additionalCompensationCharge.toFixed(2)}</TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
@@ -324,8 +324,8 @@ export function CostEstimator() {
                         <span className="font-mono">₹{(calculatedResult.finishingCost * Number(numberOfFrames)).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center font-semibold">
-                        <span>Total Transport Cost <span className="text-sm font-normal text-muted-foreground">(Cost/Frame × No. of Frames)</span>:</span>
-                        <span className="font-mono">₹{(calculatedResult.transportCost * Number(numberOfFrames)).toFixed(2)}</span>
+                        <span>Total Additional Compensation Charge <span className="text-sm font-normal text-muted-foreground">(Cost/Frame × No. of Frames)</span>:</span>
+                        <span className="font-mono">₹{(calculatedResult.additionalCompensationCharge * Number(numberOfFrames)).toFixed(2)}</span>
                     </div>
                      <div className="flex justify-between items-center font-bold text-2xl text-primary pt-4 border-t mt-4">
                         <span>Grand Total Project Cost <span className="text-sm font-normal text-muted-foreground">(Cost/Frame × No. of Frames)</span>:</span>
