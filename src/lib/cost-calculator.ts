@@ -41,8 +41,8 @@ export interface CalculatedOutput {
     }>;
 }
 
-const CUTTING_COST_PER_MINUTE = 1.73;
-const WELDING_COST_PER_MINUTE = 2.08;
+const CUTTING_COST_PER_MINUTE = 40.25;
+const WELDING_COST_PER_MINUTE = 60.00;
 
 /**
  * Calculates fabrication costs based on Gemini output and the internal cost/time sheet.
@@ -90,20 +90,8 @@ export async function calculateFabricationCosts(
     }
   });
 
-  let materialEntry = fabricationSheet.find(
-    i => i.material === geminiOutput.material && i.type === "Material"
-  );
-   if (!materialEntry) {
-        materialEntry = fabricationSheet.find(i => i.material === "Default" && i.type === "Material");
-   }
-  
-  const effectiveMaterialLength = options.materialLength;
-  let materialCost = 0;
-  if (materialEntry && materialEntry.cost_per_unit_length !== undefined) {
-      materialCost = effectiveMaterialLength * materialEntry.cost_per_unit_length;
-  }
-
+  const materialCost = options.materialLength * 900;
   const totalCost = totalFabricationCost + materialCost;
 
-  return { materialLength: effectiveMaterialLength, totalTime, totalCost, materialCost, tasksBreakdown };
+  return { materialLength: options.materialLength, totalTime, totalCost, materialCost, tasksBreakdown };
 }
