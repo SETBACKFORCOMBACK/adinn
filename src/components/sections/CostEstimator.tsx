@@ -22,6 +22,7 @@ export function CostEstimator() {
   const [calculatedResult, setCalculatedResult] = useState<CalculatedOutput | null>(null);
   const [numberOfFrames, setNumberOfFrames] = useState<number | ''>('');
   const [materialLength, setMaterialLength] = useState<number | ''>('');
+  const [materialCostPerLength, setMaterialCostPerLength] = useState<number | ''>(900);
   const [cuttingTime, setCuttingTime] = useState<number | ''>(25);
   const [weldingTime, setWeldingTime] = useState<number | ''>(30);
   
@@ -65,6 +66,7 @@ export function CostEstimator() {
       
       const calculated = await calculateFabricationCosts(result, {
         materialLength: materialLength !== '' ? materialLength : result.material_length,
+        materialCostPerLength: materialCostPerLength !== '' ? materialCostPerLength : 900,
         cuttingTime: cuttingTime !== '' ? cuttingTime : 25,
         weldingTime: weldingTime !== '' ? weldingTime : 30,
       });
@@ -100,7 +102,7 @@ export function CostEstimator() {
             />
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 pt-4 border-t">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t">
               <div className="space-y-2">
                 <Label htmlFor="material-length">Material Length</Label>
                 <Input
@@ -111,6 +113,17 @@ export function CostEstimator() {
                   placeholder="Leave blank for AI"
                 />
                 <p className="text-xs text-muted-foreground">Total length per frame.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="material-cost-per-length">Material Cost Per Length</Label>
+                <Input
+                  id="material-cost-per-length"
+                  type="number"
+                  value={materialCostPerLength}
+                  onChange={(e) => setMaterialCostPerLength(e.target.value === '' ? '' : Number(e.target.value))}
+                  placeholder="Default: 900"
+                />
+                <p className="text-xs text-muted-foreground">Cost per unit length (e.g., ₹900).</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cutting-time">Cutting Time</Label>
@@ -205,7 +218,7 @@ export function CostEstimator() {
             <Card>
               <CardHeader>
                 <CardTitle>Material Cost (Per Frame)</CardTitle>
-                <CardDescription>Based on the total length required for one frame. (Formula: ₹900 × Material Length)</CardDescription>
+                <CardDescription>Based on the total length required for one frame. (Formula: Cost Per Length × Material Length)</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>

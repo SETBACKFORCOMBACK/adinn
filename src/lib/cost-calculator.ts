@@ -24,6 +24,7 @@ export interface CalculationSheetEntry {
 
 export interface CalculationOptions {
     materialLength: number;
+    materialCostPerLength: number;
     cuttingTime: number;
     weldingTime: number;
 }
@@ -77,7 +78,7 @@ export async function calculateFabricationCosts(
   const finishingCost = totalLaborCost * 0.50;
   const additionalCompensationCharge = 100;
 
-  const materialCost = options.materialLength * 900;
+  const materialCost = options.materialLength * options.materialCostPerLength;
   const totalCost = totalLaborCost + finishingCost + materialCost + additionalCompensationCharge;
 
   return { 
