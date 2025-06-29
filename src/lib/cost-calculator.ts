@@ -42,7 +42,7 @@ export interface CalculatedOutput {
 }
 
 const CUTTING_COST_PER_MINUTE = 1.73;
-const WELDING_COST_PER_MINUTE = 2.08;
+const WELDING_COST_PER_MINUTE = 2.00;
 
 /**
  * Calculates fabrication costs based on Gemini output and the internal cost/time sheet.

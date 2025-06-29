@@ -65,8 +65,8 @@ export function CostEstimator() {
       
       const calculated = await calculateFabricationCosts(result, {
         materialLength: materialLength !== '' ? materialLength : result.material_length,
-        cuttingTime: cuttingTime !== '' ? cuttingTime : 10,
-        weldingTime: weldingTime !== '' ? weldingTime : 15,
+        cuttingTime: cuttingTime !== '' ? cuttingTime : 25,
+        weldingTime: weldingTime !== '' ? weldingTime : 30,
       });
       setCalculatedResult(calculated);
 
@@ -119,7 +119,7 @@ export function CostEstimator() {
                   type="number"
                   value={cuttingTime}
                   onChange={(e) => setCuttingTime(e.target.value === '' ? '' : Number(e.target.value))}
-                  placeholder="Default: 10"
+                  placeholder="Default: 25"
                 />
                  <p className="text-xs text-muted-foreground">Mins per frame.</p>
               </div>
@@ -130,7 +130,7 @@ export function CostEstimator() {
                   type="number"
                   value={weldingTime}
                   onChange={(e) => setWeldingTime(e.target.value === '' ? '' : Number(e.target.value))}
-                  placeholder="Default: 15"
+                  placeholder="Default: 30"
                 />
                  <p className="text-xs text-muted-foreground">Mins per frame.</p>
               </div>
@@ -230,7 +230,7 @@ export function CostEstimator() {
             <Card>
                 <CardHeader>
                     <CardTitle>Labor Charges & Time (Per Frame)</CardTitle>
-                    <CardDescription>Costs are calculated based on time input (Rates: Cutting @ ₹1.73/min, Welding @ ₹2.08/min).</CardDescription>
+                    <CardDescription>Costs are calculated based on time input (Rates: Cutting @ ₹1.73/min, Welding @ ₹2.00/min).</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
