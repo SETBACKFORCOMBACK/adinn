@@ -21,9 +21,13 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
   const labourRate = 2; // Based on user-provided calculation sheets
   const cuttingLabourCost = project.cuttingTime * labourRate;
   const weldingLabourCost = project.weldingTime * labourRate;
+  
+  const totalLabourCost = project.labourCost;
+  const helperCharge = project.helperCharge;
+  const consumables = project.consumables;
 
   const materialCost = project.totalLength * materialCostPerLength;
-  const fabricationCostPerFrame = project.labourCost + project.helperCharge + project.consumables;
+  const fabricationCostPerFrame = totalLabourCost + helperCharge + consumables;
   const totalCostPerFrame = materialCost + fabricationCostPerFrame;
   const totalCost = totalCostPerFrame * numFrames;
 
@@ -51,6 +55,31 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
           </p>
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Specifications</CardTitle>
+          <CardDescription>Key details for this project preset.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+            <div className="font-medium text-muted-foreground">Pipe Measurement</div>
+            <div>{project.sqPipe}</div>
+            
+            <div className="font-medium text-muted-foreground">Pipe Weight</div>
+            <div>{project.pipeWeightKg} kg</div>
+
+            <div className="font-medium text-muted-foreground">Total Material Length</div>
+            <div>{project.totalLength} units</div>
+
+            <div className="font-medium text-muted-foreground">Total Cuttings</div>
+            <div>{project.totalCutting} cuts</div>
+
+            <div className="font-medium text-muted-foreground">Total Weldings</div>
+            <div>{project.totalWelding} welds</div>
+          </div>
+        </CardContent>
+      </Card>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Left column for inputs */}
@@ -116,11 +145,11 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
                         <p className="text-muted-foreground">Helper Charge</p>
                         <p className="text-xs text-muted-foreground">(50% of Labour Cost)</p>
                     </div>
-                    <span className="font-medium">{formatCurrency(project.helperCharge)}</span>
+                    <span className="font-medium">{formatCurrency(helperCharge)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Consumables</span>
-                    <span className="font-medium">{formatCurrency(project.consumables)}</span>
+                    <span className="font-medium">{formatCurrency(consumables)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center text-lg font-bold">
