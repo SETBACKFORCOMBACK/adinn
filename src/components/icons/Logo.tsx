@@ -3,28 +3,46 @@ import React from 'react';
 export function Logo(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
-      width="32"
-      height="32"
-      viewBox="0 0 32 32"
+      viewBox="0 0 285 105"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <path
-        d="M6 10L16 4L26 10L16 16L6 10Z"
-        fill="currentColor"
-        className="text-primary"
-      />
-      <path
-        d="M6 14V22L16 28V20L6 14Z"
-        fill="currentColor"
-        className="text-primary/70"
-      />
-      <path
-        d="M26 14V22L16 28V20L26 14Z"
-        fill="currentColor"
-        className="text-accent"
-      />
+      <g>
+        {/* Stylized A */}
+        <path d="M42.5,7.5 L0,83.5 H18.5 L23,70.5 H63.5 L68,83.5 H85.5 Z" fill="#231F20" />
+        <path d="M42.9 20.6L31.6 60.1H54.2L42.9 20.6Z" fill="#D82027" />
+
+        {/* Text 'd inn' */}
+        <text
+          x="88"
+          y="78"
+          fontFamily="'Arial Black', 'Helvetica Bold', sans-serif"
+          fontSize="60"
+          fontWeight="900"
+          fill="#231F20"
+        >
+          d inn
+        </text>
+
+        {/* Red dot */}
+        <circle cx="203" cy="27" r="9" fill="#D82027" />
+        
+        {/* Underline */}
+        <rect x="42" y="86" width="225" height="4" fill="#D82027" />
+        
+        {/* Subtitle */}
+        <text
+          x="75"
+          y="100"
+          fontFamily="Arial, sans-serif"
+          fontSize="14"
+          fontWeight="normal"
+          fill="#231F20"
+        >
+          Advertising Services Pvt. Ltd.
+        </text>
+      </g>
     </svg>
   );
 }
