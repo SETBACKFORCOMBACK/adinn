@@ -26,6 +26,10 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
   const formatCurrency = (amount: number) => {
     return `₹${amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
+  
+  const formatCurrencySimple = (amount: number) => {
+    return `₹${amount.toLocaleString("en-IN")}`;
+  };
 
   return (
     <div className="space-y-8 mt-6 max-w-4xl mx-auto">
@@ -58,7 +62,7 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
                         id="num-frames" 
                         type="number" 
                         value={numFrames}
-                        onChange={(e) => setNumFrames(Number(e.target.value))}
+                        onChange={(e) => setNumFrames(Math.max(1, Number(e.target.value)))}
                         min="1"
                     />
                 </div>
@@ -83,15 +87,24 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Material Cost</span>
+                    <div>
+                        <p className="text-muted-foreground">Material Cost</p>
+                        <p className="text-xs text-muted-foreground">({project.totalLength} units &times; {formatCurrencySimple(materialCostPerLength)})</p>
+                    </div>
                     <span className="font-medium">{formatCurrency(materialCost)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Labour Cost</span>
+                    <div>
+                        <p className="text-muted-foreground">Labour Cost</p>
+                         <p className="text-xs text-muted-foreground">(Cutting + Welding)</p>
+                    </div>
                     <span className="font-medium">{formatCurrency(project.labourCost)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Helper Charge (50%)</span>
+                    <div>
+                        <p className="text-muted-foreground">Helper Charge</p>
+                        <p className="text-xs text-muted-foreground">(50% of Labour Cost)</p>
+                    </div>
                     <span className="font-medium">{formatCurrency(project.helperCharge)}</span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -100,7 +113,10 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center text-lg font-bold">
-                    <span>Total Cost per Frame</span>
+                    <div>
+                        <p>Total Cost per Frame</p>
+                        <p className="text-xs font-normal text-muted-foreground">(Material + Labour + Helper + Consumables)</p>
+                    </div>
                     <span>{formatCurrency(totalCostPerFrame)}</span>
                 </div>
             </CardContent>
