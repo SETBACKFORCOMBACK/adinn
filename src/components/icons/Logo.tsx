@@ -17,9 +17,9 @@ export function Logo(props: React.SVGProps<SVGSVGElement>) {
         <text
           x="88"
           y="78"
-          fontFamily="'Arial Black', 'Helvetica Bold', sans-serif"
+          fontFamily="Orbitron, sans-serif"
           fontSize="60"
-          fontWeight="900"
+          fontWeight="700"
           fill="#231F20"
         >
           d inn
@@ -35,9 +35,9 @@ export function Logo(props: React.SVGProps<SVGSVGElement>) {
         <text
           x="75"
           y="100"
-          fontFamily="Arial, sans-serif"
+          fontFamily="Inter, sans-serif"
           fontSize="14"
-          fontWeight="normal"
+          fontWeight="400"
           fill="#231F20"
         >
           Advertising Services Pvt. Ltd.
