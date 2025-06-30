@@ -30,6 +30,9 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
   const fabricationCostPerFrame = totalLabourCost + helperCharge + consumables;
   const totalCostPerFrame = materialCost + fabricationCostPerFrame;
   const totalCost = totalCostPerFrame * numFrames;
+  
+  const timePerFrame = project.cuttingTime + project.weldingTime;
+  const totalTime = timePerFrame * numFrames;
 
   const formatCurrency = (amount: number) => {
     return `₹${amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -38,6 +41,16 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
   const formatCurrencySimple = (amount: number) => {
     return `₹${amount.toLocaleString("en-IN")}`;
   };
+  
+  const formatTime = (minutes: number) => {
+    if (minutes < 60) {
+        return `${minutes} min`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${hours}h ${remainingMinutes > 0 ? `${remainingMinutes}m` : ''}`.trim();
+  }
+
 
   return (
     <div className="space-y-8 mt-6 max-w-4xl mx-auto">
@@ -115,8 +128,8 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
         {/* Right column for cost breakdown */}
         <Card className="bg-blue-50/20">
             <CardHeader>
-                <CardTitle>Cost Breakdown</CardTitle>
-                <CardDescription>Estimated cost for a single frame.</CardDescription>
+                <CardTitle>Breakdown per Frame</CardTitle>
+                <CardDescription>Estimated cost and time for a single frame.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
@@ -159,6 +172,14 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
                     </div>
                     <span>{formatCurrency(totalCostPerFrame)}</span>
                 </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between items-center text-lg font-bold">
+                    <div>
+                        <p>Total Time per Frame</p>
+                        <p className="text-xs font-normal text-muted-foreground">(Cutting Time + Welding Time)</p>
+                    </div>
+                    <span>{formatTime(timePerFrame)}</span>
+                </div>
             </CardContent>
         </Card>
       </div>
@@ -169,6 +190,11 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
             <CardDescription className="text-xl">Total Estimated Cost ({numFrames} {numFrames > 1 ? 'Frames' : 'Frame'})</CardDescription>
             <CardTitle className="text-5xl font-bold text-primary tracking-tight">
                 {formatCurrency(totalCost)}
+            </CardTitle>
+            <Separator className="my-4" />
+            <CardDescription className="text-xl">Total Estimated Time</CardDescription>
+            <CardTitle className="text-4xl font-bold text-primary tracking-tight">
+                {formatTime(totalTime)}
             </CardTitle>
         </CardHeader>
       </Card>
