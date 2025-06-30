@@ -18,6 +18,10 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
   const [numFrames, setNumFrames] = useState(1);
   const [materialCostPerLength, setMaterialCostPerLength] = useState(900);
 
+  const labourRate = 2; // Based on user-provided calculation sheets
+  const cuttingLabourCost = project.cuttingTime * labourRate;
+  const weldingLabourCost = project.weldingTime * labourRate;
+
   const materialCost = project.totalLength * materialCostPerLength;
   const fabricationCostPerFrame = project.labourCost + project.helperCharge + project.consumables;
   const totalCostPerFrame = materialCost + fabricationCostPerFrame;
@@ -95,10 +99,17 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
                 </div>
                 <div className="flex justify-between items-center">
                     <div>
-                        <p className="text-muted-foreground">Labour Cost</p>
-                         <p className="text-xs text-muted-foreground">(Cutting + Welding)</p>
+                        <p className="text-muted-foreground">Cutting Cost</p>
+                        <p className="text-xs text-muted-foreground">({project.cuttingTime} min &times; ₹{labourRate}/min)</p>
                     </div>
-                    <span className="font-medium">{formatCurrency(project.labourCost)}</span>
+                    <span className="font-medium">{formatCurrency(cuttingLabourCost)}</span>
+                </div>
+                 <div className="flex justify-between items-center">
+                    <div>
+                        <p className="text-muted-foreground">Welding Cost</p>
+                        <p className="text-xs text-muted-foreground">({project.weldingTime} min &times; ₹{labourRate}/min)</p>
+                    </div>
+                    <span className="font-medium">{formatCurrency(weldingLabourCost)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                     <div>
