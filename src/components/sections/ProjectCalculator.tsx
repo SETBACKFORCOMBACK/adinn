@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { ProjectType } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,23 @@ interface ProjectCalculatorProps {
 
 export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
   const [numFrames, setNumFrames] = useState(1);
-  const [materialCostPerLength, setMaterialCostPerLength] = useState(900);
+  const [materialCosts, setMaterialCosts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const initialCosts: Record<string, number> = {};
+    if (project.materialDetails && project.materialDetails.length > 0) {
+      project.materialDetails.forEach(detail => {
+        initialCosts[detail.name] = 900;
+      });
+    } else {
+      initialCosts['default'] = 900;
+    }
+    setMaterialCosts(initialCosts);
+  }, [project]);
+
+  const handleMaterialCostChange = (key: string, value: number) => {
+    setMaterialCosts(prev => ({ ...prev, [key]: Math.max(0, value) }));
+  };
 
   const labourRate = 2; // Based on user-provided calculation sheets
   const cuttingLabourCost = project.cuttingTime * labourRate;
@@ -26,7 +42,12 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
   const helperCharge = project.helperCharge;
   const consumables = project.consumables;
 
-  const materialCost = project.totalLength * materialCostPerLength;
+  const materialCost = project.materialDetails && project.materialDetails.length > 0
+    ? project.materialDetails.reduce((total, detail) => {
+        return total + (detail.length * (materialCosts[detail.name] || 0));
+      }, 0)
+    : project.totalLength * (materialCosts['default'] || 0);
+
   const fabricationCostPerFrame = totalLabourCost + helperCharge + consumables;
   const totalCostPerFrame = materialCost + fabricationCostPerFrame;
   const totalCost = totalCostPerFrame * numFrames;
@@ -82,8 +103,19 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
             <div className="font-medium text-muted-foreground">Pipe Weight</div>
             <div>{project.pipeWeightKg} kg</div>
 
-            <div className="font-medium text-muted-foreground">Total Material Length</div>
-            <div>{project.totalLength} units</div>
+            {project.materialDetails && project.materialDetails.length > 0 ? (
+                project.materialDetails.map(detail => (
+                    <React.Fragment key={detail.name}>
+                        <div className="font-medium text-muted-foreground">{detail.name} Length</div>
+                        <div>{detail.length} units</div>
+                    </React.Fragment>
+                ))
+            ) : (
+                <>
+                    <div className="font-medium text-muted-foreground">Total Material Length</div>
+                    <div>{project.totalLength} units</div>
+                </>
+            )}
 
             <div className="font-medium text-muted-foreground">Total Cuttings</div>
             <div>{project.totalCutting} cuts</div>
@@ -112,16 +144,32 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
                         min="1"
                     />
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="material-cost">Material Cost per Unit Length</Label>
-                    <Input 
-                        id="material-cost" 
-                        type="number" 
-                        value={materialCostPerLength}
-                        onChange={(e) => setMaterialCostPerLength(Number(e.target.value))}
-                        min="0"
-                    />
-                </div>
+
+                {project.materialDetails && project.materialDetails.length > 0 ? (
+                    project.materialDetails.map(detail => (
+                        <div key={detail.name} className="space-y-2">
+                            <Label htmlFor={`material-cost-${detail.name}`}>Cost for {detail.name}</Label>
+                            <Input
+                                id={`material-cost-${detail.name}`}
+                                type="number"
+                                value={materialCosts[detail.name] || ''}
+                                onChange={(e) => handleMaterialCostChange(detail.name, Number(e.target.value))}
+                                min="0"
+                            />
+                        </div>
+                    ))
+                ) : (
+                    <div className="space-y-2">
+                        <Label htmlFor="material-cost">Material Cost per Unit Length</Label>
+                        <Input 
+                            id="material-cost" 
+                            type="number" 
+                            value={materialCosts['default'] || ''}
+                            onChange={(e) => handleMaterialCostChange('default', Number(e.target.value))}
+                            min="0"
+                        />
+                    </div>
+                )}
             </CardContent>
         </Card>
 
@@ -132,13 +180,28 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
                 <CardDescription>Estimated cost and time for a single frame.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                    <div>
-                        <p className="text-muted-foreground">Material Cost</p>
-                        <p className="text-xs text-muted-foreground">({project.totalLength} units &times; {formatCurrencySimple(materialCostPerLength)})</p>
+                
+                {project.materialDetails && project.materialDetails.length > 0 ? (
+                    project.materialDetails.map(detail => (
+                        <div key={detail.name} className="flex justify-between items-center">
+                            <div>
+                                <p className="text-muted-foreground">{detail.name} Cost</p>
+                                <p className="text-xs text-muted-foreground">({detail.length} units &times; {formatCurrencySimple(materialCosts[detail.name] || 0)})</p>
+                            </div>
+                            <span className="font-medium">{formatCurrency(detail.length * (materialCosts[detail.name] || 0))}</span>
+                        </div>
+                    ))
+                ) : (
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <p className="text-muted-foreground">Material Cost</p>
+                            <p className="text-xs text-muted-foreground">({project.totalLength} units &times; {formatCurrencySimple(materialCosts['default'] || 0)})</p>
+                        </div>
+                        <span className="font-medium">{formatCurrency(materialCost)}</span>
                     </div>
-                    <span className="font-medium">{formatCurrency(materialCost)}</span>
-                </div>
+                )}
+
+
                 <div className="flex justify-between items-center">
                     <div>
                         <p className="text-muted-foreground">Cutting Cost</p>

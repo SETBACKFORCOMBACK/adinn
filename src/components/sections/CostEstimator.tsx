@@ -63,6 +63,10 @@ const projectTypes: ProjectType[] = [
     sqPipe: "Outer: 2'x1', Inner: 1/2'x1/2' Sq. Pipe",
     pipeWeightKg: 3,
     totalLength: 2.25,
+    materialDetails: [
+      { name: "Outer Pipe (2'x1')", length: 1.5 },
+      { name: "Inner Support Pipe (½'x½')", length: 0.75 },
+    ],
     totalCutting: 20,
     totalWelding: 12,
     cuttingTime: 13,

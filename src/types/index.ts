@@ -5,6 +5,10 @@ export type ProjectType = {
   sqPipe: string;
   pipeWeightKg: number;
   totalLength: number;
+  materialDetails?: {
+    name: string;
+    length: number;
+  }[];
   totalCutting: number;
   totalWelding: number;
   cuttingTime: number;
