@@ -67,9 +67,24 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
     if (minutes < 60) {
         return `${minutes} min`;
     }
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return `${hours}h ${remainingMinutes > 0 ? `${remainingMinutes}m` : ''}`.trim();
+    if (minutes < 1440) { // Less than 24 hours
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        return `${hours}h ${remainingMinutes > 0 ? `${remainingMinutes}m` : ''}`.trim();
+    }
+    const days = Math.floor(minutes / 1440);
+    const remainingMinutesAfterDays = minutes % 1440;
+    const hours = Math.floor(remainingMinutesAfterDays / 60);
+    const remainingMinutes = remainingMinutesAfterDays % 60;
+    
+    let result = `${days}d`;
+    if (hours > 0) {
+        result += ` ${hours}h`;
+    }
+    if (remainingMinutes > 0) {
+        result += ` ${remainingMinutes}m`;
+    }
+    return result.trim();
   }
 
 
