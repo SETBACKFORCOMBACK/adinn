@@ -55,6 +55,12 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
   const timePerFrame = project.cuttingTime + project.weldingTime;
   const totalTime = timePerFrame * numFrames;
 
+  const totalMaterialCost = materialCost * numFrames;
+  const totalCuttingLabourCost = cuttingLabourCost * numFrames;
+  const totalWeldingLabourCost = weldingLabourCost * numFrames;
+  const totalHelperCharge = helperCharge * numFrames;
+  const totalConsumables = consumables * numFrames;
+
   const formatCurrency = (amount: number) => {
     return `₹${amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
@@ -264,19 +270,63 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
 
       {/* Total cost summary card */}
       <Card className="border-primary border-2 shadow-xl">
-        <CardHeader className="text-center">
-            <CardDescription className="text-xl">Total Estimated Cost ({numFrames} {numFrames > 1 ? 'Frames' : 'Frame'})</CardDescription>
-            <CardTitle className="text-5xl font-bold text-primary tracking-tight">
-                {formatCurrency(totalCost)}
-            </CardTitle>
-            <Separator className="my-4" />
-            <CardDescription className="text-xl">Total Estimated Time</CardDescription>
-            <CardTitle className="text-4xl font-bold text-primary tracking-tight">
-                {formatTime(totalTime)}
-            </CardTitle>
+        <CardHeader>
+          <CardTitle className="text-center text-2xl">Total Estimate for {numFrames} {numFrames > 1 ? 'Frames' : 'Frame'}</CardTitle>
         </CardHeader>
+        <CardContent className="space-y-4 px-6 pb-6">
+            <div className="flex justify-between items-center">
+                <div>
+                    <p className="text-muted-foreground">Total Material Cost</p>
+                    <p className="text-xs text-muted-foreground">({formatCurrency(materialCost)}/frame &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
+                </div>
+                <span className="font-medium">{formatCurrency(totalMaterialCost)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+                <div>
+                    <p className="text-muted-foreground">Total Cutting Cost</p>
+                    <p className="text-xs text-muted-foreground">({formatCurrency(cuttingLabourCost)}/frame &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
+                </div>
+                <span className="font-medium">{formatCurrency(totalCuttingLabourCost)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+                <div>
+                    <p className="text-muted-foreground">Total Welding Cost</p>
+                    <p className="text-xs text-muted-foreground">({formatCurrency(weldingLabourCost)}/frame &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
+                </div>
+                <span className="font-medium">{formatCurrency(totalWeldingLabourCost)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+                <div>
+                    <p className="text-muted-foreground">Total Helper Charge</p>
+                    <p className="text-xs text-muted-foreground">({formatCurrency(helperCharge)}/frame &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
+                </div>
+                <span className="font-medium">{formatCurrency(totalHelperCharge)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+                <div>
+                    <p className="text-muted-foreground">Total Consumables</p>
+                    <p className="text-xs text-muted-foreground">({formatCurrency(consumables)}/frame &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
+                </div>
+                <span className="font-medium">{formatCurrency(totalConsumables)}</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between items-center text-2xl font-bold">
+                <div>
+                    <p>Grand Total Cost</p>
+                    <p className="text-xs font-normal text-muted-foreground">({formatCurrency(totalCostPerFrame)}/frame &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
+                </div>
+                <span className="text-primary">{formatCurrency(totalCost)}</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between items-center text-2xl font-bold">
+                <div>
+                    <p>Grand Total Time</p>
+                    <p className="text-xs font-normal text-muted-foreground">({formatTime(timePerFrame)}/frame &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
+                </div>
+                <span className="text-primary">{formatTime(totalTime)}</span>
+            </div>
+        </CardContent>
       </Card>
-
     </div>
   );
 }
