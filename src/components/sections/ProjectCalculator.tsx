@@ -128,13 +128,13 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
                 project.materialDetails.map(detail => (
                     <React.Fragment key={detail.name}>
                         <div className="font-medium text-muted-foreground">{detail.name} Length</div>
-                        <div>{detail.length} units</div>
+                        <div>{detail.length} ft</div>
                     </React.Fragment>
                 ))
             ) : (
                 <>
                     <div className="font-medium text-muted-foreground">Total Material Length</div>
-                    <div>{project.totalLength} units</div>
+                    <div>{project.totalLength} ft</div>
                 </>
             )}
 
@@ -169,7 +169,7 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
                 {project.materialDetails && project.materialDetails.length > 0 ? (
                     project.materialDetails.map(detail => (
                         <div key={detail.name} className="space-y-2">
-                            <Label htmlFor={`material-cost-${detail.name}`}>Cost for {detail.name}</Label>
+                            <Label htmlFor={`material-cost-${detail.name}`}>Cost for {detail.name} (per ft)</Label>
                             <Input
                                 id={`material-cost-${detail.name}`}
                                 type="number"
@@ -181,7 +181,7 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
                     ))
                 ) : (
                     <div className="space-y-2">
-                        <Label htmlFor="material-cost">Material Cost per Unit Length</Label>
+                        <Label htmlFor="material-cost">Material Cost per ft</Label>
                         <Input 
                             id="material-cost" 
                             type="number" 
@@ -207,7 +207,7 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
                         <div key={detail.name} className="flex justify-between items-center">
                             <div>
                                 <p className="text-muted-foreground">{detail.name} Cost</p>
-                                <p className="text-xs text-muted-foreground">({detail.length} units &times; {formatCurrencySimple(materialCosts[detail.name] || 0)})</p>
+                                <p className="text-xs text-muted-foreground">({detail.length} ft &times; {formatCurrencySimple(materialCosts[detail.name] || 0)}/ft)</p>
                             </div>
                             <span className="font-medium">{formatCurrency(detail.length * (materialCosts[detail.name] || 0))}</span>
                         </div>
@@ -216,7 +216,7 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
                     <div className="flex justify-between items-center">
                         <div>
                             <p className="text-muted-foreground">Material Cost</p>
-                            <p className="text-xs text-muted-foreground">({project.totalLength} units &times; {formatCurrencySimple(materialCosts['default'] || 0)})</p>
+                            <p className="text-xs text-muted-foreground">({project.totalLength} ft &times; {formatCurrencySimple(materialCosts['default'] || 0)}/ft)</p>
                         </div>
                         <span className="font-medium">{formatCurrency(materialCost)}</span>
                     </div>
@@ -274,13 +274,25 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
           <CardTitle className="text-center text-2xl">Total Estimate for {numFrames} {numFrames > 1 ? 'Frames' : 'Frame'}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 px-6 pb-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <p className="text-muted-foreground">Total Material Cost</p>
-                    <p className="text-xs text-muted-foreground">({formatCurrency(materialCost)}/frame &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
+            {project.materialDetails && project.materialDetails.length > 0 ? (
+                project.materialDetails.map(detail => (
+                    <div key={detail.name} className="flex justify-between items-center">
+                        <div>
+                            <p className="text-muted-foreground">Total {detail.name} Cost</p>
+                            <p className="text-xs text-muted-foreground">({detail.length} ft &times; {formatCurrencySimple(materialCosts[detail.name] || 0)}/ft &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
+                        </div>
+                        <span className="font-medium">{formatCurrency(detail.length * (materialCosts[detail.name] || 0) * numFrames)}</span>
+                    </div>
+                ))
+            ) : (
+                <div className="flex justify-between items-center">
+                    <div>
+                        <p className="text-muted-foreground">Total Material Cost</p>
+                        <p className="text-xs text-muted-foreground">({project.totalLength} ft &times; {formatCurrencySimple(materialCosts['default'] || 0)}/ft &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
+                    </div>
+                    <span className="font-medium">{formatCurrency(totalMaterialCost)}</span>
                 </div>
-                <span className="font-medium">{formatCurrency(totalMaterialCost)}</span>
-            </div>
+            )}
             <div className="flex justify-between items-center">
                 <div>
                     <p className="text-muted-foreground">Total Cutting Cost</p>
