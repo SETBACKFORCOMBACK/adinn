@@ -278,6 +278,26 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
                 project.materialDetails.map(detail => (
                     <div key={detail.name} className="flex justify-between items-center">
                         <div>
+                            <p className="text-muted-foreground">Total {detail.name} Length</p>
+                            <p className="text-xs text-muted-foreground">({detail.length} length/frame &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
+                        </div>
+                        <span className="font-medium">{detail.length * numFrames} length</span>
+                    </div>
+                ))
+            ) : (
+                <div className="flex justify-between items-center">
+                    <div>
+                        <p className="text-muted-foreground">Total Material Length</p>
+                        <p className="text-xs text-muted-foreground">({project.totalLength} length/frame &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
+                    </div>
+                    <span className="font-medium">{project.totalLength * numFrames} length</span>
+                </div>
+            )}
+            <Separator />
+            {project.materialDetails && project.materialDetails.length > 0 ? (
+                project.materialDetails.map(detail => (
+                    <div key={detail.name} className="flex justify-between items-center">
+                        <div>
                             <p className="text-muted-foreground">Total {detail.name} Cost</p>
                             <p className="text-xs text-muted-foreground">({detail.length} length &times; {formatCurrencySimple(materialCosts[detail.name] || 0)}/length &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
                         </div>
