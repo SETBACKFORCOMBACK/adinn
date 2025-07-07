@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import type { ProjectType } from "@/types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 
 interface ProjectCalculatorProps {
   project: ProjectType;
@@ -92,6 +92,67 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
     }
     return result.trim();
   }
+
+  const handleDownloadSummary = () => {
+    let summary = `Fabrication Project Summary\n`;
+    summary += `===========================\n\n`;
+    summary += `Project: ${project.name} (${project.dimensions})\n`;
+    summary += `Number of Frames: ${numFrames}\n\n`;
+
+    summary += `--- TOTAL ESTIMATE FOR ${numFrames} ${numFrames > 1 ? 'FRAMES' : 'FRAME'} ---\n\n`;
+
+    // Total Lengths
+    if (project.materialDetails && project.materialDetails.length > 0) {
+      project.materialDetails.forEach(detail => {
+        summary += `Total ${detail.name} Length: ${detail.length * numFrames} length\n`;
+        summary += `(${detail.length} length/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n\n`;
+      })
+    } else {
+      summary += `Total Material Length: ${project.totalLength * numFrames} length\n`;
+      summary += `(${project.totalLength} length/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n\n`;
+    }
+    
+    summary += `--- COST BREAKDOWN ---\n`;
+    // Total Material Costs
+    if (project.materialDetails && project.materialDetails.length > 0) {
+        project.materialDetails.forEach(detail => {
+            summary += `Total ${detail.name} Cost: ${formatCurrency(detail.length * (materialCosts[detail.name] || 0) * numFrames)}\n`;
+            summary += `(${detail.length} length × ${formatCurrencySimple(materialCosts[detail.name] || 0)}/length × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n`;
+        })
+    } else {
+        summary += `Total Material Cost: ${formatCurrency(totalMaterialCost)}\n`;
+        summary += `(${project.totalLength} length × ${formatCurrencySimple(materialCosts['default'] || 0)}/length × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n`;
+    }
+
+    summary += `Total Cutting Cost: ${formatCurrency(totalCuttingLabourCost)}\n`;
+    summary += `(${formatCurrency(cuttingLabourCost)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n`;
+    
+    summary += `Total Welding Cost: ${formatCurrency(totalWeldingLabourCost)}\n`;
+    summary += `(${formatCurrency(weldingLabourCost)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n`;
+    
+    summary += `Total Helper Charge: ${formatCurrency(totalHelperCharge)}\n`;
+    summary += `(${formatCurrency(helperCharge)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n`;
+    
+    summary += `Total Consumables: ${formatCurrency(totalConsumables)}\n`;
+    summary += `(${formatCurrency(consumables)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n\n`;
+    
+    summary += `--- GRAND TOTALS ---\n\n`;
+    summary += `Grand Total Cost: ${formatCurrency(totalCost)}\n`;
+    summary += `(${formatCurrency(totalCostPerFrame)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n\n`;
+    
+    summary += `Grand Total Time: ${formatTime(totalTime)}\n`;
+    summary += `(${formatTime(timePerFrame)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n`;
+
+    const blob = new Blob([summary], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${project.id}-estimate.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
 
   return (
@@ -356,6 +417,12 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
                     <p className="text-xs font-normal text-muted-foreground">({formatTime(timePerFrame)}/frame &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
                 </div>
                 <span className="text-primary">{formatTime(totalTime)}</span>
+            </div>
+            <div className="pt-6 flex justify-center">
+                <Button onClick={handleDownloadSummary}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Summary
+                </Button>
             </div>
         </CardContent>
       </Card>
