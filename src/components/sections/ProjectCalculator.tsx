@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Download } from "lucide-react";
+import { jsPDF } from "jspdf";
 
 interface ProjectCalculatorProps {
   project: ProjectType;
@@ -94,64 +95,112 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
   }
 
   const handleDownloadSummary = () => {
-    let summary = `Fabrication Project Summary\n`;
-    summary += `===========================\n\n`;
-    summary += `Project: ${project.name} (${project.dimensions})\n`;
-    summary += `Number of Frames: ${numFrames}\n\n`;
+    const doc = new jsPDF();
+    let y = 15;
 
-    summary += `--- TOTAL ESTIMATE FOR ${numFrames} ${numFrames > 1 ? 'FRAMES' : 'FRAME'} ---\n\n`;
+    // Helper for adding a main line and a detail line with different font sizes
+    const addDetailLine = (mainText: string, detailText: string) => {
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(mainText, 10, y);
+        y += 5;
+        doc.setFontSize(10);
+        doc.text(detailText, 15, y);
+        y += 7;
+    }
 
-    // Total Lengths
+    // --- PDF Header ---
+    doc.setFontSize(20);
+    doc.text("Fabrication Project Summary", 105, y, { align: 'center' });
+    y += 10;
+    doc.line(10, y, 200, y); // separator
+    y += 10;
+
+    // --- Project Info ---
+    doc.setFontSize(12);
+    doc.text(`Project: ${project.name} (${project.dimensions})`, 10, y);
+    y += 7;
+    doc.text(`Number of Frames: ${numFrames}`, 10, y);
+    y += 15;
+
+    // --- Totals Section Header ---
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`--- TOTAL ESTIMATE FOR ${numFrames} ${numFrames > 1 ? 'FRAMES' : 'FRAME'} ---`, 10, y);
+    y += 10;
+
+    // --- Total Lengths ---
     if (project.materialDetails && project.materialDetails.length > 0) {
       project.materialDetails.forEach(detail => {
-        summary += `Total ${detail.name} Length: ${detail.length * numFrames} length\n`;
-        summary += `(${detail.length} length/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n\n`;
-      })
+        addDetailLine(
+          `Total ${detail.name} Length: ${detail.length * numFrames} length`,
+          `(${detail.length} length/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})`
+        );
+      });
     } else {
-      summary += `Total Material Length: ${project.totalLength * numFrames} length\n`;
-      summary += `(${project.totalLength} length/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n\n`;
+      addDetailLine(
+        `Total Material Length: ${project.totalLength * numFrames} length`,
+        `(${project.totalLength} length/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})`
+      );
     }
-    
-    summary += `--- COST BREAKDOWN ---\n`;
-    // Total Material Costs
+    y += 3;
+
+    // --- Cost Breakdown ---
     if (project.materialDetails && project.materialDetails.length > 0) {
-        project.materialDetails.forEach(detail => {
-            summary += `Total ${detail.name} Cost: ${formatCurrency(detail.length * (materialCosts[detail.name] || 0) * numFrames)}\n`;
-            summary += `(${detail.length} length × ${formatCurrencySimple(materialCosts[detail.name] || 0)}/length × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n`;
-        })
+      project.materialDetails.forEach(detail => {
+        addDetailLine(
+          `Total ${detail.name} Cost: ${formatCurrency(detail.length * (materialCosts[detail.name] || 0) * numFrames)}`,
+          `(${detail.length} length × ${formatCurrencySimple(materialCosts[detail.name] || 0)}/length × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})`
+        );
+      });
     } else {
-        summary += `Total Material Cost: ${formatCurrency(totalMaterialCost)}\n`;
-        summary += `(${project.totalLength} length × ${formatCurrencySimple(materialCosts['default'] || 0)}/length × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n`;
+      addDetailLine(
+        `Total Material Cost: ${formatCurrency(totalMaterialCost)}`,
+        `(${project.totalLength} length × ${formatCurrencySimple(materialCosts['default'] || 0)}/length × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})`
+      );
     }
+    addDetailLine(
+      `Total Cutting Cost: ${formatCurrency(totalCuttingLabourCost)}`,
+      `(${formatCurrency(cuttingLabourCost)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})`
+    );
+    addDetailLine(
+      `Total Welding Cost: ${formatCurrency(totalWeldingLabourCost)}`,
+      `(${formatCurrency(weldingLabourCost)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})`
+    );
+    addDetailLine(
+      `Total Helper Charge: ${formatCurrency(totalHelperCharge)}`,
+      `(${formatCurrency(helperCharge)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})`
+    );
+    addDetailLine(
+      `Total Consumables: ${formatCurrency(totalConsumables)}`,
+      `(${formatCurrency(totalConsumables)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})`
+    );
+    y += 5;
 
-    summary += `Total Cutting Cost: ${formatCurrency(totalCuttingLabourCost)}\n`;
-    summary += `(${formatCurrency(cuttingLabourCost)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n`;
+    // --- Grand Totals ---
+    doc.line(10, y, 200, y); // separator
+    y += 8;
     
-    summary += `Total Welding Cost: ${formatCurrency(totalWeldingLabourCost)}\n`;
-    summary += `(${formatCurrency(weldingLabourCost)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n`;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Grand Total Cost:`, 10, y);
+    doc.text(`${formatCurrency(totalCost)}`, 105, y, { align: 'right' });
+    y += 7;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`(${formatCurrency(totalCostPerFrame)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})`, 15, y);
+    y += 10;
     
-    summary += `Total Helper Charge: ${formatCurrency(totalHelperCharge)}\n`;
-    summary += `(${formatCurrency(helperCharge)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n`;
-    
-    summary += `Total Consumables: ${formatCurrency(totalConsumables)}\n`;
-    summary += `(${formatCurrency(consumables)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n\n`;
-    
-    summary += `--- GRAND TOTALS ---\n\n`;
-    summary += `Grand Total Cost: ${formatCurrency(totalCost)}\n`;
-    summary += `(${formatCurrency(totalCostPerFrame)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n\n`;
-    
-    summary += `Grand Total Time: ${formatTime(totalTime)}\n`;
-    summary += `(${formatTime(timePerFrame)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})\n`;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Grand Total Time:`, 10, y);
+    doc.text(`${formatTime(totalTime)}`, 105, y, { align: 'right' });
+    y += 7;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`(${formatTime(timePerFrame)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})`, 15, y);
 
-    const blob = new Blob([summary], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${project.id}-estimate.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    doc.save(`${project.id}-estimate.pdf`);
   };
 
 
