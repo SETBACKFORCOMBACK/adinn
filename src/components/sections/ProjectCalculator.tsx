@@ -230,7 +230,7 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
       
       {project.imageUrl && (
         <Card>
-          <CardContent className="p-2">
+          <CardContent className="p-0">
             <div className="relative aspect-video w-full">
               <Image
                 src={project.imageUrl}
