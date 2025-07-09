@@ -16,4 +16,5 @@ export type ProjectType = {
   labourCost: number;
   helperCharge: number;
   consumables: number;
+  imageUrl?: string;
 };

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Download } from "lucide-react";
-import { jsPDF } from "jspdf";
+import Image from "next/image";
 
 interface ProjectCalculatorProps {
   project: ProjectType;
@@ -56,6 +56,10 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
   const timePerFrame = project.cuttingTime + project.weldingTime;
   const totalTime = timePerFrame * numFrames;
 
+  const totalMaterialLength = project.materialDetails && project.materialDetails.length > 0 
+    ? project.materialDetails.reduce((acc, detail) => acc + detail.length, 0) * numFrames
+    : project.totalLength * numFrames;
+
   const totalMaterialCost = materialCost * numFrames;
   const totalCuttingLabourCost = cuttingLabourCost * numFrames;
   const totalWeldingLabourCost = weldingLabourCost * numFrames;
@@ -94,7 +98,8 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
     return result.trim();
   }
 
-  const handleDownloadSummary = () => {
+  const handleDownloadSummary = async () => {
+    const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     let y = 15;
 
@@ -173,7 +178,7 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
     );
     addDetailLine(
       `Total Consumables: ${formatCurrency(totalConsumables)}`,
-      `(${formatCurrency(totalConsumables)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})`
+      `(${formatCurrency(consumables)}/frame × ${numFrames} ${numFrames > 1 ? 'frames' : 'frame'})`
     );
     y += 5;
 
@@ -184,7 +189,7 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text(`Grand Total Cost:`, 10, y);
-    doc.text(`${formatCurrency(totalCost)}`, 105, y, { align: 'right' });
+    doc.text(`${formatCurrency(totalCost)}`, 200, y, { align: 'right' });
     y += 7;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
@@ -194,7 +199,7 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text(`Grand Total Time:`, 10, y);
-    doc.text(`${formatTime(totalTime)}`, 105, y, { align: 'right' });
+    doc.text(`${formatTime(totalTime)}`, 200, y, { align: 'right' });
     y += 7;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
@@ -220,6 +225,22 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
           </p>
         </div>
       </div>
+      
+      {project.imageUrl && (
+        <Card>
+          <CardContent className="p-2">
+            <div className="relative aspect-video w-full">
+              <Image
+                src={project.imageUrl}
+                alt={project.name}
+                fill
+                className="rounded-md object-cover"
+                data-ai-hint="product frame"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -384,25 +405,13 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
           <CardTitle className="text-center text-2xl">Total Estimate for {numFrames} {numFrames > 1 ? 'Frames' : 'Frame'}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 px-6 pb-6">
-            {project.materialDetails && project.materialDetails.length > 0 ? (
-                project.materialDetails.map(detail => (
-                    <div key={detail.name} className="flex justify-between items-center">
-                        <div>
-                            <p className="text-muted-foreground">Total {detail.name} Length</p>
-                            <p className="text-xs text-muted-foreground">({detail.length} length/frame &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
-                        </div>
-                        <span className="font-medium">{detail.length * numFrames} length</span>
-                    </div>
-                ))
-            ) : (
-                <div className="flex justify-between items-center">
-                    <div>
-                        <p className="text-muted-foreground">Total Material Length</p>
-                        <p className="text-xs text-muted-foreground">({project.totalLength} length/frame &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
-                    </div>
-                    <span className="font-medium">{project.totalLength * numFrames} length</span>
+            <div className="flex justify-between items-center">
+                <div>
+                    <p className="text-muted-foreground">Total Material Length</p>
+                    <p className="text-xs text-muted-foreground">({project.materialDetails ? project.materialDetails.reduce((acc, detail) => acc + detail.length, 0) : project.totalLength} length/frame &times; {numFrames} {numFrames > 1 ? 'frames' : 'frame'})</p>
                 </div>
-            )}
+                <span className="font-medium">{totalMaterialLength} length</span>
+            </div>
             <Separator />
             {project.materialDetails && project.materialDetails.length > 0 ? (
                 project.materialDetails.map(detail => (
