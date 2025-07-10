@@ -90,7 +90,7 @@ const projectTypes: ProjectType[] = [
     labourCost: 120,
     helperCharge: 60,
     consumables: 100,
-    imageUrl: "https://firebasestudio-hosting.web.app/projects/priya-1/assets/NLBF.png",
+    imageUrl: "https://placehold.co/1280x720.png",
   },
 ];
 
