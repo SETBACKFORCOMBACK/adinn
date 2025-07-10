@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Download } from "lucide-react";
 import { jsPDF } from "jspdf";
-import Image from "next/image";
 
 interface ProjectCalculatorProps {
   project: ProjectType;
@@ -231,15 +230,7 @@ export function ProjectCalculator({ project, onBack }: ProjectCalculatorProps) {
       {project.imageUrl && (
         <Card>
           <CardContent className="p-0">
-            <div className="relative aspect-video w-full">
-              <Image
-                src={project.imageUrl}
-                alt={project.name}
-                fill
-                className="rounded-md object-cover"
-                data-ai-hint="product frame"
-              />
-            </div>
+             <img src={project.imageUrl} alt={project.name} className="rounded-md w-full object-cover" data-ai-hint="product frame" />
           </CardContent>
         </Card>
       )}
