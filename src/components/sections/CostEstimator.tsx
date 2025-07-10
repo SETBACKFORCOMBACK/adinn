@@ -7,9 +7,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardContent,
 } from "@/components/ui/card";
 import type { ProjectType } from "@/types";
 import { ProjectCalculator } from "./ProjectCalculator";
+import Image from "next/image";
 
 const projectTypes: ProjectType[] = [
   {
@@ -90,7 +92,7 @@ const projectTypes: ProjectType[] = [
     labourCost: 120,
     helperCharge: 60,
     consumables: 100,
-    imageUrl: "https://firebasestudio-hosting.web.app/projects/priya-1/assets/NLBF.png",
+    imageUrl: "https://firebasestudio-hosting.web.app/projects/priya-1/assets/nlbf.png",
   },
 ];
 
@@ -124,10 +126,23 @@ export function CostEstimator() {
         {projectTypes.map((project) => (
           <Card
             key={project.id}
-            className="cursor-pointer hover:shadow-xl hover:border-primary transition-all duration-300 ease-in-out transform hover:-translate-y-1"
+            className="cursor-pointer hover:shadow-xl hover:border-primary transition-all duration-300 ease-in-out transform hover:-translate-y-1 flex flex-col"
             onClick={() => handleSelectProject(project)}
           >
-            <CardHeader className="text-center p-8">
+            {project.imageUrl && (
+              <CardContent className="p-0">
+                <div className="relative aspect-video w-full">
+                  <Image
+                    src={project.imageUrl}
+                    alt={project.name}
+                    fill
+                    className="rounded-t-lg object-cover"
+                    data-ai-hint="product frame"
+                  />
+                </div>
+              </CardContent>
+            )}
+            <CardHeader className="text-center p-8 flex-1">
               <CardTitle className="text-xl">{project.name}</CardTitle>
               <CardDescription className="text-base pt-1">
                 {project.dimensions}
