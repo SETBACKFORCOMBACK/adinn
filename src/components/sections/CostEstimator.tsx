@@ -92,7 +92,7 @@ const projectTypes: ProjectType[] = [
     labourCost: 120,
     helperCharge: 60,
     consumables: 100,
-    imageUrl: "/nlbf.png",
+    imageUrl: "https://placehold.co/800x450.png",
   },
 ];
 
