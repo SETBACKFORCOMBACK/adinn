@@ -130,17 +130,14 @@ export function CostEstimator() {
             onClick={() => handleSelectProject(project)}
           >
             {project.imageUrl && (
-              <CardContent className="p-0">
-                <div className="relative aspect-video w-full">
-                  <Image
-                    src={project.imageUrl}
-                    alt={project.name}
-                    fill
-                    className="rounded-t-lg object-cover"
-                    data-ai-hint="product frame"
-                  />
-                </div>
-              </CardContent>
+              <div className="overflow-hidden rounded-t-lg">
+                <img
+                  src={project.imageUrl}
+                  alt={project.name}
+                  className="w-full h-auto object-cover aspect-video"
+                  data-ai-hint="product frame"
+                />
+              </div>
             )}
             <CardHeader className="text-center p-8 flex-1">
               <CardTitle className="text-xl">{project.name}</CardTitle>
