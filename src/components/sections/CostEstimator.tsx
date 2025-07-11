@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/card";
 import type { ProjectType } from "@/types";
 import { ProjectCalculator } from "./ProjectCalculator";
-import Image from "next/image";
 
 const projectTypes: ProjectType[] = [
   {
@@ -92,7 +91,7 @@ const projectTypes: ProjectType[] = [
     labourCost: 120,
     helperCharge: 60,
     consumables: 100,
-    imageUrl: "https://placehold.co/600x400.png",
+    imageUrl: "https://i.ibb.co/GQLQ8m9/NLBF.png",
   },
 ];
 
